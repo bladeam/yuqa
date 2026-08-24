@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurso de Deletreo de Quechua</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #c0392b;
+            --accent-color: #3498db;
+            --correct-color: #2ecc71;
+            --incorrect-color: #c0392b;
+            --bg-color: #f0f4f8;
+            --card-bg-color: #fff;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .container {
+            background-color: var(--card-bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 95%;
+            max-width: 800px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        #setup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        label {
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: left;
+            width: 100%;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        #ayudita-btn {
+            background-color: #f1c40f;
+            border-color: #f39c12;
+            color: var(--primary-color);
+        }
+
+        #ayudita-btn:hover {
+            background-color: #f39c12;
+        }
+        
+        #ayudita-btn:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #game-section #student-name {
+            font-size: 1.2em;
+            color: var(--secondary-color);
+            min-height: 25px;
+            margin-bottom: 5px;
+        }
+
+        #student-progress {
+            font-size: 0.95em;
+            color: #7f8c8d;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #prompt-word-container {
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        #prompt-word {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--secondary-color);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .blink {
+            animation: blink 0.5s linear 6;
+        }
+        
+        #spelled-word-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .char-box {
+            width: 35px;
+            height: 45px;
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-transform: lowercase;
+            position: relative;
+        }
+        
+        .char-box.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+        }
+
+        .char-box.correct {
+            background-color: var(--correct-color);
+            color: white;
+        }
+
+        .char-box.blank::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: #7f8c8d;
+        }
+
+        #attempts-left {
+            font-weight: bold;
+            font-size: 1em;
+            color: var(--incorrect-color);
+            margin-bottom: 20px;
+        }
+        
+        .incorrect-shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        #feedback-message {
+            font-weight: bold;
+            font-size: 1.2em;
+            min-height: 25px;
+        }
+        
+        .correct-feedback { color: var(--correct-color); }
+        .incorrect-feedback { color: var(--incorrect-color); }
+
+        .game-buttons {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        #next-word-btn {
+            flex-grow: 1;
+        }
+        
+        #ayudita-btn {
+            flex-grow: 0.5;
+        }
+
+        .finish-container {
+            margin-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+            width: 100%;
+        }
+
+        #finish-btn {
+            background-color: #e67e22;
+            font-size: 0.9em;
+            padding: 8px 15px;
+        }
+
+        #finish-btn:hover {
+            background-color: #d35400;
+        }
+
+        #results-section {
+            text-align: left;
+            width: 100%;
+        }
+
+        #results-section h2 {
+            text-align: center;
+        }
+
+        .results-timestamp {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        #results-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        #results-list li {
+            background-color: #f4f8fb;
+            border: 1px solid #e0e6ec;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .student-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .percentage-badge {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            font-size: 0.9em;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #eef2f5;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.8em;
+        }
+
+        .score-correct { color: var(--correct-color); font-weight: bold; }
+        .score-incorrect { color: var(--incorrect-color); font-weight: bold; }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .details-table th, .details-table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        .details-table th {
+            background-color: #eaeaea;
+        }
+
+        #restart-btn {
+            background-color: var(--secondary-color);
+            margin: 20px auto 0 auto;
+            display: block;
+        }
+        
+        #restart-btn:hover {
+            background-color: #a93226;
+        }
+
+        #virtual-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .key-btn {
+            background-color: #34495e;
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-transform: lowercase;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .key-btn:active {
+            background-color: #2c3e50;
+        }
+        
+        .key-btn:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .key-btn.special {
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .key-btn.backspace {
+            flex: 2;
+            background-color: #7f8c8d;
+        }
+
+        @media (min-width: 600px) {
+            body { padding: 20px; }
+            .container { padding: 30px; width: 90%; }
+            h1 { font-size: 2.5em; }
+            #game-section #student-name { font-size: 1.5em; }
+            #prompt-word { font-size: 5em; }
+            #spelled-word-container { gap: 10px; }
+            .char-box { width: 50px; height: 60px; font-size: 2em; }
+            #attempts-left { font-size: 1.2em; }
+            #feedback-message { font-size: 1.5em; }
+            .game-buttons { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Concurso de Deletreo</h1>
+    
+
+    <div class="container" id="main-container">
+
+        <div id="setup-section" class="section active">
+            <h2>Configuración del Concurso</h2>
+            <form id="setup-form">
+                <label for="student-names">Lista de Estudiantes (uno por línea):</label>
+                <textarea id="student-names" placeholder="Ejemplo:&#10;Juan&#10;Ana&#10;Pedro"></textarea>
+                
+                <label for="word-count">Cantidad de palabras por estudiante:</label>
+                <input type="number" id="word-count" value="5" min="1" max="200">
+              
+                <!-- <label for="word-database">Base de datos de palabras (quechua\tespañol):</label> -->
+                <textarea style="display:none;" id="word-database" placeholder="Ejemplo:&#10;akllay	escoger&#10;llank'ay	trabajar&#10;Cusco	Cusco" edit=no ></textarea>
+
+                <button type="submit" class="btn">Empezar Concurso</button>
+            </form>
+            <p>M.Sc. Bladimir Arias Mejia</p>
+        </div>
+
+        <div id="game-section" class="section">
+            <h2 id="student-name"></h2>
+            <div id="student-progress"></div>
+            
+            <div id="prompt-word-container">
+                <span id="prompt-word"></span>
+            </div>
+            
+            <div id="spelled-word-container"></div>
+
+            <div id="feedback-message"></div>
+            
+            <div id="attempts-left">Intentos: 3</div>
+            
+            <div id="virtual-keyboard">
+                <div class="keyboard-row">
+                    <button class="key-btn" data-key="q">q</button>
+                    <button class="key-btn" data-key="w">w</button>
+                    <button class="key-btn" data-key="e">e</button>
+                    <button class="key-btn" data-key="r">r</button>
+                    <button class="key-btn" data-key="t">t</button>
+                    <button class="key-btn" data-key="y">y</button>
+                    <button class="key-btn" data-key="u">u</button>
+                    <button class="key-btn" data-key="i">i</button>
+                    <button class="key-btn" data-key="o">o</button>
+                    <button class="key-btn" data-key="p">p</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key-btn" data-key="a">a</button>
+                    <button class="key-btn" data-key="s">s</button>
+                    <button class="key-btn" data-key="d">d</button>
+                    <button class="key-btn" data-key="f">f</button>
+                    <button class="key-btn" data-key="g">g</button>
+                    <button class="key-btn" data-key="h">h</button>
+                    <button class="key-btn" data-key="j">j</button>
+                    <button class="key-btn" data-key="k">k</button>
+                    <button class="key-btn" data-key="l">l</button>
+                    <button class="key-btn" data-key="ñ">ñ</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key-btn" data-key="z">z</button>
+                    <button class="key-btn" data-key="x">x</button>
+                    <button class="key-btn" data-key="c">c</button>
+                    <button class="key-btn" data-key="v">v</button>
+                    <button class="key-btn" data-key="b">b</button>
+                    <button class="key-btn" data-key="n">n</button>
+                    <button class="key-btn" data-key="m">m</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key-btn special" data-key="'">'</button>
+                    <button class="key-btn special" data-key="ch">ch</button>
+                    <button class="key-btn special" data-key="kh">kh</button>
+                    <button class="key-btn special" data-key="ph">ph</button>
+                    <button class="key-btn special" data-key="qh">qh</button>
+                    <button class="key-btn special" data-key="th">th</button>
+                    <button class="key-btn special" data-key="sh">sh</button>
+                    <button class="key-btn backspace" data-key="backspace">Borrar</button>
+                </div>
+            </div>
+
+            <div class="game-buttons">
+                <button id="ayudita-btn" class="btn">Ayudita</button>
+                <button id="next-word-btn" class="btn" style="display: none;">Siguiente Palabra</button>
+            </div>
+
+            <div class="finish-container">
+                <button id="finish-btn" class="btn" style="display: none;">Finalizar Concurso</button>
+            </div>
+        </div>
+
+        <div id="results-section" class="section">
+            <h2>Resultados del Concurso</h2>
+            <div id="results-timestamp" class="results-timestamp"></div>
+            <ul id="results-list"></ul>
+            <button id="restart-btn" class="btn">Volver a Empezar</button>
+        </div>
+
+    </div>
+
+    <script>
+        const defaultDatabase = `
+manq'aña\tcomer
+umaña\tbeber / tomar
+ikiña\tdormir
+sarnaqaña\tcaminar
+jalantaña\tcorrer
+aruña-parlaña\thablar
+yatichaña\tenseñar
+yatiqaña\taprender
+qillqaña\tescribir
+uñjaña\tver / mirar
+isiña\tvestirse
+luraña\thacer / trabajar
+anataña\tjugar
+jutaña\tvenir
+saraña\tir
+ichuña\tllevar en brazos
+ajtayaña\tasustar
+katuña\tatrapar / agarrar
+thaqhaña\tbuscar
+laruña\treir
+jikisiña\tencontrar / encontrarse
+alaña\tcomprar
+thuqhuña\tbailar
+aljaña\tvender
+jayllipña-kirkiña\tcantar
+ist'aña\tescuchar
+pichaña\tbarrer
+munaña\tamar / querer
+jist'araña\tabrir
+jist'aña\tcerrar
+qunt'asiña\tsentarse
+armasiña\tolvidar
+amtaña\trecordar`;
+
+        const setupSection = document.getElementById('setup-section');
+        const gameSection = document.getElementById('game-section');
+        const resultsSection = document.getElementById('results-section');
+        const setupForm = document.getElementById('setup-form');
+        const studentNamesInput = document.getElementById('student-names');
+        const wordCountInput = document.getElementById('word-count');
+        const wordDatabaseInput = document.getElementById('word-database');
+        const studentNameEl = document.getElementById('student-name');
+        const studentProgressEl = document.getElementById('student-progress');
+        const promptWordEl = document.getElementById('prompt-word');
+        const spelledWordContainer = document.getElementById('spelled-word-container');
+        const attemptsLeftEl = document.getElementById('attempts-left');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+        const ayuditaBtn = document.getElementById('ayudita-btn');
+        const nextWordBtn = document.getElementById('next-word-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const resultsListEl = document.getElementById('results-list');
+        const resultsTimestampEl = document.getElementById('results-timestamp');
+        const restartBtn = document.getElementById('restart-btn');
+        const virtualKeyboard = document.getElementById('virtual-keyboard');
+
+        let students = [];
+        let currentStudentIndex = 0;
+        let allWords = [];
+        let currentQuestion = null;
+        let typedWord = '';
+        let isAnswered = false;
+        let currentStudent = null;
+        let wordsPerStudent = 0;
+        let hintsUsedForCurrentWord = 0;
+        let wrongAttempts = 0;
+
+        function parseWordDatabase(dataString) {
+            return dataString.split('\n')
+                .map(line => {
+                    const parts = line.split('\t');
+                    if (parts.length === 2) {
+                        return { quechua: parts[0].trim(), spanish: parts[1].trim() };
+                    }
+                    return null;
+                })
+                .filter(item => item && item.quechua && item.spanish);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function setupGameDisplay() {
+            spelledWordContainer.innerHTML = '';
+            if (!currentQuestion) return;
+
+            const quechuaWord = currentQuestion.quechua;
+            const characters = quechuaWord.split('');
+
+            characters.forEach(char => {
+                const charBox = document.createElement('div');
+                charBox.className = 'char-box blank';
+                spelledWordContainer.appendChild(charBox);
+            });
+        }
+
+        function updateSpelledWordDisplay(typedWord) {
+            const boxes = spelledWordContainer.querySelectorAll('.char-box');
+            boxes.forEach(box => {
+                box.textContent = '';
+                box.classList.remove('incorrect', 'correct');
+                box.classList.add('blank');
+            });
+
+            for (let i = 0; i < typedWord.length; i++) {
+                if (i < boxes.length) {
+                    const char = typedWord[i];
+                    boxes[i].textContent = char;
+                    if (char === currentQuestion.quechua[i]) {
+                        boxes[i].classList.add('correct');
+                        boxes[i].classList.remove('incorrect');
+                    } else {
+                        boxes[i].classList.add('incorrect');
+                        boxes[i].classList.remove('correct');
+                    }
+                }
+            }
+        }
+
+        function handleInput(char) {
+            if (isAnswered) return;
+            const correctQuechua = currentQuestion.quechua;
+
+            if (char === 'backspace') {
+                typedWord = typedWord.slice(0, -1);
+                feedbackMessageEl.textContent = '';
+            } else if (typedWord.length < correctQuechua.length) {
+                if (char !== correctQuechua[typedWord.length]) {
+                    wrongAttempts++;
+                    attemptsLeftEl.textContent = `Intentos: ${3 - wrongAttempts}`;
+                    feedbackMessageEl.textContent = '¡Letra incorrecta!';
+                    feedbackMessageEl.className = 'incorrect-feedback';
+
+                    if (wrongAttempts > 3) {
+                        feedbackMessageEl.textContent = 'Has superado el límite de 3 intentos incorrectos.';
+                        feedbackMessageEl.className = 'incorrect-feedback';
+                        isAnswered = true;
+                        if (currentStudent) {
+                            currentStudent.history.push({ word: currentQuestion.quechua, result: 'incorrecta', hints: hintsUsedForCurrentWord });
+                            currentStudent.wordsSpelled++;
+                        }
+                        showNextButton();
+                        return;
+                    }
+                } else {
+                    feedbackMessageEl.textContent = '';
+                }
+                typedWord += char;
+            }
+
+            updateSpelledWordDisplay(typedWord);
+
+            if (typedWord.length === correctQuechua.length) {
+                setTimeout(checkSpelling, 200);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameSection.classList.contains('active')) return;
+
+            const key = e.key.toLowerCase();
+
+            if (key === 'enter') {
+                e.preventDefault();
+                if (isAnswered) {
+                    if (nextWordBtn.style.display !== 'none') {
+                        startNewRound();
+                    } else if (finishBtn.style.display !== 'none' && allStudentsFinished()) {
+                        showResults();
+                    }
+                } else {
+                    checkSpelling();
+                }
+                return;
+            }
+
+            if (isAnswered) return;
+
+            const allowedKeys = /^[a-zñ' ]$/;
+
+            if (key === 'backspace' || key === 'delete') {
+                e.preventDefault();
+                handleInput('backspace');
+            } else if (allowedKeys.test(key)) {
+                e.preventDefault();
+                handleInput(key);
+            }
+        });
+
+        virtualKeyboard.addEventListener('click', (e) => {
+            if (e.target.classList.contains('key-btn') && !isAnswered) {
+                const key = e.target.dataset.key;
+                handleInput(key);
+            }
+        });
+
+        function checkSpelling() {
+            if (isAnswered) return;
+            const correctQuechua = currentQuestion.quechua;
+
+            if (typedWord.trim().toLowerCase() === correctQuechua.toLowerCase()) {
+                handleCorrectSpelling();
+            } else {
+                handleIncorrectSpelling();
+            }
+        }
+
+        function handleCorrectSpelling() {
+            isAnswered = true;
+            if (hintsUsedForCurrentWord > 3) {
+                feedbackMessageEl.textContent = '¡Correcto! Pero has usado más de 3 ayudas, esta palabra no suma puntos.';
+                feedbackMessageEl.className = 'incorrect-feedback';
+            } else {
+                feedbackMessageEl.textContent = '¡Correcto!';
+                feedbackMessageEl.className = 'correct-feedback';
+            }
+
+            const boxes = spelledWordContainer.querySelectorAll('.char-box');
+            boxes.forEach(box => {
+                box.classList.add('correct');
+                box.classList.remove('incorrect', 'blank');
+            });
+
+            if (currentStudent) {
+                if (hintsUsedForCurrentWord <= 3) {
+                    currentStudent.score++;
+                }
+                currentStudent.history.push({ word: currentQuestion.quechua, result: 'correcta', hints: hintsUsedForCurrentWord });
+                currentStudent.wordsSpelled++;
+            }
+
+            showNextButton();
+        }
+
+        function handleIncorrectSpelling() {
+            isAnswered = true;
+            feedbackMessageEl.textContent = `¡Incorrecto! La palabra correcta era: ${currentQuestion.quechua}`;
+            feedbackMessageEl.className = 'incorrect-feedback';
+            spelledWordContainer.classList.add('incorrect-shake');
+            setTimeout(() => {
+                spelledWordContainer.classList.remove('incorrect-shake');
+            }, 500);
+
+            const boxes = spelledWordContainer.querySelectorAll('.char-box');
+            boxes.forEach(box => {
+                box.classList.add('incorrect');
+                box.classList.remove('correct', 'blank');
+            });
+            updateSpelledWordDisplay(currentQuestion.quechua);
+
+            if (currentStudent) {
+                currentStudent.history.push({ word: currentQuestion.quechua, result: 'incorrecta', hints: hintsUsedForCurrentWord });
+                currentStudent.wordsSpelled++;
+            }
+
+            showNextButton();
+        }
+
+        function showNextButton() {
+            nextWordBtn.style.display = 'block';
+            ayuditaBtn.style.display = 'none';
+        }
+
+        ayuditaBtn.addEventListener('click', () => {
+            if (isAnswered || !currentStudent) return;
+
+            const quechuaWord = currentQuestion.quechua;
+            hintsUsedForCurrentWord++;
+            ayuditaBtn.textContent = `Ayudita (${hintsUsedForCurrentWord})`;
+
+            if (hintsUsedForCurrentWord > 3) {
+                feedbackMessageEl.textContent = '¡Atención! Has usado más de 3 ayudas, esta palabra no sumará puntos.';
+                feedbackMessageEl.className = 'incorrect-feedback';
+            } else {
+                feedbackMessageEl.textContent = '¡Una ayudita! Se ha completado la siguiente letra.';
+                feedbackMessageEl.className = 'correct-feedback';
+            }
+
+            if (typedWord.length < quechuaWord.length) {
+                typedWord = quechuaWord.substring(0, typedWord.length + 1);
+                updateSpelledWordDisplay(typedWord);
+            } else {
+                feedbackMessageEl.textContent = 'No hay más letras para ayudar.';
+                feedbackMessageEl.className = 'incorrect-feedback';
+            }
+
+            if (typedWord.length === quechuaWord.length) {
+                setTimeout(checkSpelling, 200);
+            }
+        });
+
+        setupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const names = studentNamesInput.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+            wordsPerStudent = parseInt(wordCountInput.value);
+
+            students = names.map(name => ({
+                name: name,
+                score: 0,
+                wordsSpelled: 0,
+                history: []
+            }));
+
+            const customWords = wordDatabaseInput.value;
+            if (customWords) {
+                allWords = parseWordDatabase(customWords);
+                if (allWords.length === 0) {
+                    alert('La base de datos de palabras no es válida. Se usará la predeterminada.');
+                    allWords = parseWordDatabase(defaultDatabase);
+                }
+            } else {
+                allWords = parseWordDatabase(defaultDatabase);
+            }
+
+            if (allWords.length === 0) {
+                alert('No hay palabras para iniciar el concurso. Por favor, ingrese al menos una.');
+                return;
+            }
+
+            startGame();
+        });
+
+        function startGame() {
+            setupSection.classList.remove('active');
+            gameSection.classList.add('active');
+            resultsSection.classList.remove('active');
+
+            shuffle(allWords);
+            currentStudentIndex = 0;
+
+            finishBtn.style.display = 'block';
+            startNewRound();
+        }
+
+        function allStudentsFinished() {
+            if (students.length === 0) return true;
+            return students.every(s => s.wordsSpelled >= wordsPerStudent);
+        }
+
+        function getNextAvailableStudentIndex() {
+            if (allStudentsFinished()) return -1;
+            let index = currentStudentIndex;
+            for (let i = 0; i < students.length; i++) {
+                if (students[index].wordsSpelled < wordsPerStudent) {
+                    return index;
+                }
+                index = (index + 1) % students.length;
+            }
+            return -1;
+        }
+
+        function startNewRound() {
+            if (allStudentsFinished()) {
+                finishBtn.textContent = 'Ver resultados';
+                finishBtn.style.display = 'block';
+                nextWordBtn.style.display = 'none';
+                return;
+            }
+
+            if (allWords.length === 0) {
+                alert('¡Se han agotado las palabras del banco! Finaliza el concurso para ver los resultados.');
+                return;
+            }
+
+            const nextIndex = getNextAvailableStudentIndex();
+            if (nextIndex === -1) {
+                finishBtn.textContent = 'Ver resultados';
+                finishBtn.style.display = 'block';
+                nextWordBtn.style.display = 'none';
+                return;
+            }
+
+            currentStudentIndex = nextIndex;
+            currentStudent = students[currentStudentIndex];
+            
+            // Avanzar el índice base para la siguiente rotación
+            currentStudentIndex = (currentStudentIndex + 1) % students.length;
+
+            isAnswered = false;
+            feedbackMessageEl.textContent = '';
+            nextWordBtn.style.display = 'none';
+            ayuditaBtn.style.display = 'block';
+            ayuditaBtn.disabled = false;
+            hintsUsedForCurrentWord = 0;
+            wrongAttempts = 0;
+            ayuditaBtn.textContent = 'Ayudita';
+            attemptsLeftEl.textContent = 'Intentos: 3';
+
+            studentNameEl.textContent = `Turno de: ${currentStudent.name}`;
+            studentProgressEl.textContent = `Palabra ${currentStudent.wordsSpelled + 1} de ${wordsPerStudent}`;
+
+            const wordData = allWords.pop();
+            currentQuestion = wordData;
+
+            typedWord = '';
+            setupGameDisplay();
+
+            promptWordEl.textContent = wordData.spanish;
+            promptWordEl.title = `Deletrear: ${wordData.quechua}`;
+            promptWordEl.classList.add('blink');
+            setTimeout(() => {
+                promptWordEl.classList.remove('blink');
+            }, 3000);
+        }
+
+        finishBtn.addEventListener('click', showResults);
+        nextWordBtn.addEventListener('click', startNewRound);
+        restartBtn.addEventListener('click', () => window.location.reload());
+
+        function showResults() {
+            gameSection.classList.remove('active');
+            resultsSection.classList.add('active');
+            resultsListEl.innerHTML = '';
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            resultsTimestampEl.textContent = `Fecha: ${dateStr} | Hora: ${timeStr}`;
+
+            const resultsData = students.length > 0 ? students : [{ name: 'Jugador', score: currentStudent.score, history: currentStudent.history }];
+
+            resultsData.forEach(student => {
+                const totalQuestions = student.history.length;
+                const correctCount = student.history.filter(h => h.result === 'correcta').length;
+                const incorrectCount = student.history.filter(h => h.result === 'incorrecta').length;
+                const totalHintsUsed = student.history.reduce((sum, h) => sum + (h.hints || 0), 0);
+                const percentage = totalQuestions > 0 ? ((student.score / totalQuestions) * 100).toFixed(1) : '0.0';
+
+                const li = document.createElement('li');
+
+                let detailsRows = student.history.map((item, idx) => `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><strong>${item.word}</strong></td>
+                        <td class="${item.result === 'correcta' ? 'score-correct' : 'score-incorrect'}">${item.result.toUpperCase()}</td>
+                        <td>${item.hints || 0}</td>
+                    </tr>
+                `).join('');
+
+                li.innerHTML = `
+                    <div class="student-header">
+                        <span class="student-name">${student.name}</span>
+                        <span class="percentage-badge">Nota: ${percentage}%</span>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Puntaje Final</span>
+                            <span><strong>${student.score}</strong> / ${totalQuestions}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Aciertos</span>
+                            <span class="score-correct">${correctCount}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Errores</span>
+                            <span class="score-incorrect">${incorrectCount}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Ayuditas Totales</span>
+                            <span>${totalHintsUsed}</span>
+                        </div>
+                    </div>
+
+                    <details style="margin-top: 5px; cursor: pointer;">
+                        <summary style="font-weight: bold; color: var(--accent-color);">Ver desglose por pregunta</summary>
+                        <table class="details-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Palabra</th>
+                                    <th>Resultado</th>
+                                    <th>Ayuditas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${detailsRows}
+                            </tbody>
+                        </table>
+                    </details>
+                `;
+
+                resultsListEl.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
