@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificación de Matrices - Diagrama de Venn-Euler</title>
+    <style>
+        :root {
+            --bg-color: #0b132b;
+            --card-bg: #1c2541;
+            --card-inner: #0f172a;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --correct: #22c55e;
+            --incorrect: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        textarea, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: var(--card-inner);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--accent), #0284c7);
+            color: #0f172a;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        button:hover {
+            opacity: 0.95;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: var(--text-main);
+            box-shadow: none;
+            margin-top: 15px;
+        }
+
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            background: var(--card-inner);
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .quiz-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .matrix-box {
+            background: var(--card-inner);
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .matrix-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .matrix {
+            display: grid;
+            gap: 10px;
+            padding: 10px 18px;
+            border-left: 3px solid var(--accent);
+            border-right: 3px solid var(--accent);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .matrix-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 48px;
+            height: 48px;
+            background-color: #1e293b;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #38bdf8;
+        }
+
+        .venn-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-inner);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .venn-instructions {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        svg.venn-diagram {
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            user-select: none;
+        }
+
+        .venn-region {
+            fill-opacity: 0.25;
+            stroke-width: 2.5;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .venn-region:hover {
+            fill-opacity: 0.65 !important;
+            stroke-width: 4 !important;
+        }
+
+        .venn-text {
+            font-size: 12px;
+            font-weight: bold;
+            fill: #ffffff;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 450px;
+            width: 90%;
+            border: 2px solid var(--incorrect);
+            text-align: center;
+        }
+
+        .modal-icon { font-size: 3rem; color: var(--incorrect); margin-bottom: 10px; }
+        .modal-title { font-size: 1.4rem; color: var(--incorrect); margin-bottom: 10px; font-weight: bold; }
+        .modal-body { font-size: 1rem; color: var(--text-main); margin-bottom: 20px; line-height: 1.5; }
+
+        .feedback-toast { min-height: 30px; font-weight: bold; font-size: 1.1rem; text-align: center; margin-top: 10px; }
+        .correct-text { color: var(--correct); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: var(--accent); background-color: var(--card-inner); }
+
+        .hidden { display: none !important; }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid #1e293b;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Clasificación de Matrices</h1>
+            <p style="color: var(--text-muted);">Evaluación Interactiva mediante Diagramas de Venn-Euler</p>
+        </header>
+
+        <!-- CONFIGURACIÓN INICIAL -->
+        <div id="setup-screen" class="card">
+            <h2 style="margin-bottom: 15px; color: var(--accent);">Configuración de la Sesión</h2>
+            
+            <div class="input-group">
+                <label for="participants">Nombres de los Participantes (uno por fila):</label>
+                <textarea id="participants" rows="4" placeholder="Ejemplo:&#10;Juan Pérez&#10;María Gómez"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="num-questions">Número de Preguntas / Matrices:</label>
+                <input type="number" id="num-questions" min="1" max="20" value="5">
+            </div>
+
+            <button id="start-btn">Iniciar Evaluación</button>
+        </div>
+
+        <!-- PANTALLA PRINCIPAL DE PREGUNTAS -->
+        <div id="quiz-screen" class="card hidden">
+            <div class="stats-bar">
+                <div><span>Participantes:</span> <span id="display-user" class="stat-value">Anónimo</span></div>
+                <div><span>Pregunta:</span> <span id="display-progress" class="stat-value">1 / 5</span></div>
+                <div><span>Aciertos:</span> <span id="display-score" class="stat-value">0</span></div>
+                <div><span>Tiempo:</span> <span id="display-timer" class="stat-value">00:00</span></div>
+            </div>
+
+            <div class="quiz-layout">
+                <div class="matrix-box">
+                    <div class="matrix-title">Matriz a Clasificar</div>
+                    <div id="matrix-target" class="matrix"></div>
+                </div>
+
+                <div class="venn-container">
+                    <div class="venn-instructions">
+                        Haga clic en la <strong>región ovalada del Diagrama de Venn</strong> que mejor clasifique a la matriz arriba mostrada:
+                    </div>
+                    <div id="venn-svg-wrapper" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <div id="feedback" class="feedback-toast"></div>
+
+            <button id="finish-btn" class="btn-secondary">Finalizar Evaluación</button>
+        </div>
+
+        <!-- HISTORIAL Y RESULTADOS -->
+        <div id="history-screen" class="card hidden">
+            <h2 style="color: var(--accent); margin-bottom: 15px;">Historial de Evaluaciones</h2>
+            <div id="summary-info" style="margin: 15px 0; line-height: 1.8; background: var(--card-inner); padding: 15px; border-radius: 10px; border: 1px solid #334155;"></div>
+
+            <div style="overflow-x: auto;">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Participante(s)</th>
+                            <th>Preguntas</th>
+                            <th>Duración</th>
+                            <th>Nota (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <button id="restart-btn" style="margin-top: 20px;">Nueva Evaluación</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE ERROR -->
+    <div id="error-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title">¡Respuesta Incorrecta!</div>
+            <div id="modal-msg" class="modal-body"></div>
+            <button id="modal-next-btn">Siguiente Matriz</button>
+        </div>
+    </div>
+
+    <footer>
+        Copyright: M.Sc. Bladimir Arias Mejia
+    </footer>
+
+    <script>
+        const ALL_TYPES = [
+            'Cuadrada', 'Triangular superior', 'Triangular inferior', 
+            'Simétrica', 'Diagonal', 'Escalar', 'Cero', 
+            'Identidad', 'Antisimétrica', 'Escalonada'
+        ];
+
+        let participantsList = [];
+        let totalQuestionsLimit = 5;
+        let currentQuestionIndex = 0;
+        let correctAnswersCount = 0;
+        let currentMatrixObj = null;
+        let isAnswerPending = false;
+
+        let startTime = null;
+        let timerInterval = null;
+        let elapsedTime = 0;
+
+        const setupScreen = document.getElementById('setup-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const historyScreen = document.getElementById('history-screen');
+        
+        const participantsInput = document.getElementById('participants');
+        const numQuestionsInput = document.getElementById('num-questions');
+        const startBtn = document.getElementById('start-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        const displayUser = document.getElementById('display-user');
+        const displayProgress = document.getElementById('display-progress');
+        const displayScore = document.getElementById('display-score');
+        const displayTimer = document.getElementById('display-timer');
+        const matrixTarget = document.getElementById('matrix-target');
+        const vennSvgWrapper = document.getElementById('venn-svg-wrapper');
+        const feedbackDiv = document.getElementById('feedback');
+        
+        const errorModal = document.getElementById('error-modal');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalNextBtn = document.getElementById('modal-next-btn');
+
+        const historyTableBody = document.querySelector('#history-table tbody');
+        const summaryInfo = document.getElementById('summary-info');
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function createMatrix(rows, cols, fillFn) {
+            let mat = [];
+            for (let i = 0; i < rows; i++) {
+                let row = [];
+                for (let j = 0; j < cols; j++) row.push(fillFn(i, j));
+                mat.push(row);
+            }
+            return mat;
+        }
+
+        function generateMatrixByType(type) {
+            const size = 3;
+            let grid = [];
+
+            switch (type) {
+                case 'Cero': grid = createMatrix(size, size, () => 0); break;
+                case 'Identidad': grid = createMatrix(size, size, (i, j) => i === j ? 1 : 0); break;
+                case 'Escalar':
+                    const k = getRandomInt(2, 8) * (Math.random() > 0.5 ? 1 : -1);
+                    grid = createMatrix(size, size, (i, j) => i === j ? k : 0);
+                    break;
+                case 'Diagonal':
+                    grid = createMatrix(size, size, (i, j) => i === j ? getRandomInt(1, 9) : 0);
+                    if (grid[0][0] === grid[1][1] && grid[1][1] === grid[2][2]) grid[0][0] += 2;
+                    break;
+                case 'Triangular superior':
+                    grid = createMatrix(size, size, (i, j) => i <= j ? getRandomInt(1, 9) : 0);
+                    grid[0][2] = getRandomInt(1, 8);
+                    break;
+                case 'Triangular inferior':
+                    grid = createMatrix(size, size, (i, j) => i >= j ? getRandomInt(1, 9) : 0);
+                    grid[2][0] = getRandomInt(1, 8);
+                    break;
+                case 'Simétrica':
+                    grid = createMatrix(size, size, () => 0);
+                    for (let i = 0; i < size; i++) {
+                        for (let j = i; j < size; j++) {
+                            let val = getRandomInt(-5, 9);
+                            grid[i][j] = val; grid[j][i] = val;
+                        }
+                    }
+                    break;
+                case 'Antisimétrica':
+                    grid = createMatrix(size, size, () => 0);
+                    for (let i = 0; i < size; i++) {
+                        for (let j = i; j < size; j++) {
+                            if (i === j) grid[i][j] = 0;
+                            else {
+                                let val = getRandomInt(1, 8);
+                                grid[i][j] = val; grid[j][i] = -val;
+                            }
+                        }
+                    }
+                    break;
+                case 'Escalonada':
+                    grid = [
+                        [getRandomInt(1, 5), getRandomInt(-3, 5), getRandomInt(-3, 5), getRandomInt(-3, 5)],
+                        [0, getRandomInt(1, 5), getRandomInt(-3, 5), getRandomInt(-3, 5)],
+                        [0, 0, 0, getRandomInt(1, 5)]
+                    ];
+                    break;
+                case 'Cuadrada':
+                default:
+                    grid = createMatrix(size, size, () => getRandomInt(-5, 9));
+                    grid[0][1] = 5; grid[1][0] = -2;
+                    break;
+            }
+            return { grid, primaryType: type };
+        }
+
+        function renderVennDiagram(activeType) {
+            let diagramHtml = '';
+
+            if (['Identidad', 'Escalar', 'Diagonal', 'Cuadrada'].includes(activeType)) {
+                diagramHtml = `
+                <svg class="venn-diagram" viewBox="0 0 500 320">
+                    <ellipse cx="250" cy="160" rx="230" ry="145" fill="#1e3a8a" stroke="#3b82f6" class="venn-region" data-type="Cuadrada" />
+                    <text x="250" y="32" class="venn-text">Matriz Cuadrada</text>
+
+                    <ellipse cx="250" cy="175" rx="170" ry="105" fill="#0369a1" stroke="#38bdf8" class="venn-region" data-type="Diagonal" />
+                    <text x="250" y="88" class="venn-text">Matriz Diagonal</text>
+
+                    <ellipse cx="250" cy="195" rx="110" ry="65" fill="#0d9488" stroke="#2dd4bf" class="venn-region" data-type="Escalar" />
+                    <text x="250" y="148" class="venn-text">Matriz Escalar</text>
+
+                    <ellipse cx="250" cy="215" rx="55" ry="32" fill="#15803d" stroke="#4ade80" class="venn-region" data-type="Identidad" />
+                    <text x="250" y="215" class="venn-text">Identidad</text>
+                </svg>`;
+            } else if (['Triangular superior', 'Triangular inferior', 'Simétrica', 'Antisimétrica'].includes(activeType)) {
+                diagramHtml = `
+                <svg class="venn-diagram" viewBox="0 0 500 320">
+                    <ellipse cx="250" cy="160" rx="235" ry="145" fill="#1e1b4b" stroke="#6366f1" class="venn-region" data-type="Cuadrada" />
+                    <text x="250" y="35" class="venn-text">Matrices Cuadradas</text>
+
+                    <ellipse cx="170" cy="170" rx="100" ry="85" fill="#047857" stroke="#10b981" class="venn-region" data-type="Triangular superior" />
+                    <text x="140" y="140" class="venn-text">Triangular Superior</text>
+
+                    <ellipse cx="330" cy="170" rx="100" ry="85" fill="#b45309" stroke="#f59e0b" class="venn-region" data-type="Triangular inferior" />
+                    <text x="360" y="140" class="venn-text">Triangular Inferior</text>
+
+                    <ellipse cx="180" cy="210" rx="60" ry="35" fill="#6d28d9" stroke="#a855f7" class="venn-region" data-type="Simétrica" />
+                    <text x="180" y="210" class="venn-text">Simétrica</text>
+
+                    <ellipse cx="320" cy="210" rx="60" ry="35" fill="#be123c" stroke="#fb7185" class="venn-region" data-type="Antisimétrica" />
+                    <text x="320" y="210" class="venn-text">Antisimétrica</text>
+                </svg>`;
+            } else {
+                diagramHtml = `
+                <svg class="venn-diagram" viewBox="0 0 500 320">
+                    <ellipse cx="170" cy="160" rx="150" ry="130" fill="#1e293b" stroke="#64748b" class="venn-region" data-type="Escalonada" />
+                    <text x="100" y="80" class="venn-text">Matriz Escalonada</text>
+
+                    <ellipse cx="330" cy="160" rx="140" ry="120" fill="#312e81" stroke="#818cf8" class="venn-region" data-type="Cuadrada" />
+                    <text x="380" y="80" class="venn-text">Matriz Cuadrada</text>
+
+                    <ellipse cx="250" cy="190" rx="80" ry="60" fill="#831843" stroke="#f43f5e" class="venn-region" data-type="Cero" />
+                    <text x="250" y="190" class="venn-text">Matriz Cero</text>
+                </svg>`;
+            }
+
+            vennSvgWrapper.innerHTML = diagramHtml;
+
+            const regions = vennSvgWrapper.querySelectorAll('.venn-region');
+            regions.forEach(region => {
+                region.addEventListener('click', (e) => {
+                    handleAnswerSelection(e.target.getAttribute('data-type'));
+                });
+            });
+        }
+
+        function renderMatrix(grid) {
+            matrixTarget.innerHTML = '';
+            const cols = grid[0].length;
+            matrixTarget.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            grid.forEach(row => {
+                row.forEach(val => {
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell';
+                    cell.textContent = val;
+                    matrixTarget.appendChild(cell);
+                });
+            });
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= totalQuestionsLimit) {
+                finishQuiz();
+                return;
+            }
+
+            isAnswerPending = false;
+            feedbackDiv.textContent = '';
+            feedbackDiv.className = 'feedback-toast';
+
+            displayProgress.textContent = `${currentQuestionIndex + 1} / ${totalQuestionsLimit}`;
+
+            const randomType = ALL_TYPES[Math.floor(Math.random() * ALL_TYPES.length)];
+            currentMatrixObj = generateMatrixByType(randomType);
+
+            renderMatrix(currentMatrixObj.grid);
+            renderVennDiagram(currentMatrixObj.primaryType);
+        }
+
+        function handleAnswerSelection(selectedType) {
+            if (isAnswerPending) return;
+            isAnswerPending = true;
+
+            if (selectedType === currentMatrixObj.primaryType) {
+                correctAnswersCount++;
+                displayScore.textContent = correctAnswersCount;
+                feedbackDiv.textContent = '¡Correcto! Excelente clasificación.';
+                feedbackDiv.className = 'feedback-toast correct-text';
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }, 1000);
+            } else {
+                modalMsg.innerHTML = `
+                    Has seleccionado: <strong>${selectedType}</strong>.<br><br>
+                    La respuesta correcta para esta matriz era: <strong style="color: var(--accent);">${currentMatrixObj.primaryType}</strong>.
+                `;
+                errorModal.classList.add('active');
+            }
+        }
+
+        modalNextBtn.addEventListener('click', () => {
+            errorModal.classList.remove('active');
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+                const seconds = String(elapsedTime % 60).padStart(2, '0');
+                displayTimer.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        startBtn.addEventListener('click', () => {
+            const rawText = participantsInput.value.trim();
+            participantsList = rawText ? rawText.split('\n').filter(p => p.trim() !== '') : ['Anónimo'];
+            
+            const qVal = parseInt(numQuestionsInput.value, 10);
+            totalQuestionsLimit = (isNaN(qVal) || qVal < 1) ? 5 : qVal;
+
+            displayUser.textContent = participantsList.join(', ');
+
+            setupScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            currentQuestionIndex = 0;
+            correctAnswersCount = 0;
+            displayScore.textContent = '0';
+
+            startTimer();
+            loadQuestion();
+        });
+
+        finishBtn.addEventListener('click', finishQuiz);
+
+        function finishQuiz() {
+            stopTimer();
+            quizScreen.classList.add('hidden');
+            historyScreen.classList.remove('hidden');
+
+            const totalAsked = currentQuestionIndex === 0 ? 1 : currentQuestionIndex;
+            const percentage = ((correctAnswersCount / totalAsked) * 100).toFixed(1);
+            const minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+            const seconds = String(elapsedTime % 60).padStart(2, '0');
+            const formattedTime = `${minutes}:${seconds}`;
+            const currentDate = new Date().toLocaleString();
+
+            summaryInfo.innerHTML = `
+                <strong>Participante(s):</strong> ${participantsList.join(', ')}<br>
+                <strong>Preguntas Respondidas:</strong> ${totalAsked} de ${totalQuestionsLimit}<br>
+                <strong>Aciertos:</strong> ${correctAnswersCount} (${percentage}%)<br>
+                <strong>Tiempo Total:</strong> ${formattedTime}
+            `;
+
+            saveHistoryRecord({
+                date: currentDate,
+                names: participantsList.join(', '),
+                questions: `${totalAsked}/${totalQuestionsLimit}`,
+                duration: formattedTime,
+                score: `${percentage}%`
+            });
+
+            loadHistoryTable();
+        }
+
+        restartBtn.addEventListener('click', () => {
+            historyScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        });
+
+        function saveHistoryRecord(record) {
+            let history = JSON.parse(localStorage.getItem('matrix_venn_history') || '[]');
+            history.unshift(record);
+            localStorage.setItem('matrix_venn_history', JSON.stringify(history));
+        }
+
+        function loadHistoryTable() {
+            historyTableBody.innerHTML = '';
+            let history = JSON.parse(localStorage.getItem('matrix_venn_history') || '[]');
+            
+            history.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.names}</td>
+                    <td>${row.questions}</td>
+                    <td>${row.duration}</td>
+                    <td><strong style="color: var(--accent);">${row.score}</strong></td>
+                `;
+                historyTableBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
