@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío Estadística: Variables y Escalas</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --accent: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 800px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input, select, textarea {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: var(--text);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* HUD & Game Screen */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            background: var(--primary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .variable-box {
+            background: linear-gradient(135deg, #312e81, #1e1b4b);
+            border: 2px solid var(--accent);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .variable-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-group {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .option-group h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .radio-btn {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+
+        .radio-btn input {
+            margin-right: 8px;
+        }
+
+        .feedback {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .feedback.incorrect {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        /* Results Screen */
+        .score-box {
+            text-align: center;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 12px;
+        }
+
+        .score-number {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .history-table-container {
+            max-height: 280px;
+            overflow-y: auto;
+            border: 1px solid #334155;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            background-color: #0f172a;
+            color: var(--accent);
+            position: sticky;
+            top: 0;
+        }
+
+        .status-ok { color: var(--success); }
+        .status-err { color: var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- PANTALLA 1: CONFIGURACIÓN -->
+    <div id="setup-screen" class="screen active">
+        <h1>Desafío Estadística</h1>
+        <p class="subtitle">Identificación de Variables y Escalas de Medición</p>
+        
+        <div class="form-group">
+            <label for="student-select">Seleccionar Estudiante (Opcional):</label>
+            <select id="student-select">
+                <option value="">-- Modo Anónimo / Invitado --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="student-list">Cargar o Editar Lista de Estudiantes (uno por línea):</label>
+            <textarea id="student-list" placeholder="Ejemplo:&#10;Juan Pérez&#10;María Gómez&#10;Carlos Ruiz"></textarea>
+            <button type="button" id="btn-update-students" style="padding: 6px 12px; font-size: 0.85rem; align-self: flex-end;">Actualizar Lista</button>
+        </div>
+
+        <div class="form-group">
+            <label for="question-count">Número de preguntas (1 a 200):</label>
+            <input type="number" id="question-count" min="1" max="200" value="10">
+        </div>
+
+        <button id="btn-start">¡Comenzar Juego!</button>
+ <center><p>© Bladimir Arias</p></center>
+    </div>
+
+    <!-- PANTALLA 2: JUEGO -->
+    <div id="game-screen" class="screen">
+        <div class="hud">
+            <div>Jugador: <span id="hud-player" class="badge">Invitado</span></div>
+            <div>Pregunta: <span id="hud-progress">1/10</span></div>
+            <div>Puntos: <span id="hud-score">0</span></div>
+        </div>
+
+        <div class="variable-box">
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Clasifica la siguiente variable:</p>
+            <div id="variable-display" class="variable-title">Peso</div>
+        </div>
+
+        <div class="options-grid">
+            <div class="option-group">
+                <h3>Tipo de Variable</h3>
+                <label class="radio-btn"><input type="radio" name="var-type" value="Cualitativa Nominal"> Cualitativa Nominal</label>
+                <label class="radio-btn"><input type="radio" name="var-type" value="Cualitativa Ordinal"> Cualitativa Ordinal</label>
+                <label class="radio-btn"><input type="radio" name="var-type" value="Cuantitativa Discreta"> Cuantitativa Discreta</label>
+                <label class="radio-btn"><input type="radio" name="var-type" value="Cuantitativa Continua"> Cuantitativa Continua</label>
+            </div>
+
+            <div class="option-group">
+                <h3>Escala de Medición</h3>
+                <label class="radio-btn"><input type="radio" name="scale-type" value="Nominal"> Nominal</label>
+                <label class="radio-btn"><input type="radio" name="scale-type" value="Ordinal"> Ordinal</label>
+                <label class="radio-btn"><input type="radio" name="scale-type" value="Intervalo"> Intervalo</label>
+                <label class="radio-btn"><input type="radio" name="scale-type" value="Razón"> Razón</label>
+            </div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <button id="btn-submit">Responder</button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS -->
+    <div id="results-screen" class="screen">
+        <h2>¡Juego Terminado!</h2>
+        <p class="subtitle" id="result-player-name">Estudiante: Anónimo</p>
+
+        <div class="score-box">
+            <div>Calificación Final</div>
+            <div id="score-percentage" class="score-number">0%</div>
+            <p id="score-details">Respondiste correctamente 0 de 0 preguntas.</p>
+        </div>
+
+        <h3>Historial de Respuestas</h3>
+        <div class="history-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Tu Respuesta</th>
+                        <th>Correcta</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        </div>
+
+        <button id="btn-restart">Jugar de Nuevo</button>
+    </div>
+</div>
+
+<script>
+    // Banco masivo de 100 variables estadísticas
+    const database = [
+        // Cualitativas Nominales (Nominal)
+        { name: "Nacionalidad de una persona", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Color de ojos", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Estado civil (Soltero, Casado, Divorciado, Viudo)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Grupo sanguíneo (A, B, AB, O)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Carrera universitaria elegida", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Marca de automóvil favorita", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Sistema operativo del teléfono (Android, iOS, etc.)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Religión practicada", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Lugar de nacimiento (Ciudad)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Partidario político (Partido A, B, C)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Género musical preferido", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Proveedor de servicios de internet", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Tipo de vivienda (Casa, Departamento, Finca)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Red social más utilizada", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Idioma materno", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Código Postal de una residencia", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Número de teléfono (como identificador)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Tipo de mascota (Perro, Gato, Ave, Ninguna)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Plato de comida preferido", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Método de pago utilizado (Efectivo, Tarjeta, Transferencia)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Marca de calzado deportivo", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Deporte practicado", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Navegador web utilizado (Chrome, Firefox, Safari)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Tipo de suelo (Arcilloso, Arenoso, Limoso)", type: "Cualitativa Nominal", scale: "Nominal" },
+        { name: "Diagnóstico médico (Gripe, Diabetes, Migraña)", type: "Cualitativa Nominal", scale: "Nominal" },
+
+        // Cualitativas Ordinales (Ordinal)
+        { name: "Nivel socioeconómico (Bajo, Medio, Alto)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Medalla olímpica obtenida (Oro, Plata, Bronce)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Nivel de satisfacción de un servicio (Muy Malo a Excelente)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Grado de instrucción (Primaria, Secundaria, Universidad)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Talla de ropa (XS, S, M, L, XL)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Etapa de desarrollo humano (Infancia, Niñez, Adolescencia, Adultez)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Rango militar (Soldado, Cabo, Sargento, Teniente)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Grado de dolor en escala analógica (Leve, Moderado, Severo)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Fase de un cáncer (Etapa I, II, III, IV)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Calificación académica por letras (A, B, C, D, F)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Posición final en una competencia deportiva (1°, 2°, 3° place)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Nivel de inglés (A1, A2, B1, B2, C1, C2)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Complejidad de una tarea (Baja, Media, Alta)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Grado de quemadura en la piel (Primer, Segundo, Tercer grado)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Calificación de riesgo crediticio (AAA, AA, A, BBB, etc.)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Frecuencia de ejercicio (Nunca, A veces, Frecuentemente, Siempre)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Nivel de urgencia médica (Triage: Verde, Amarillo, Rojo)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Madurez de una fruta (Verde, Pintona, Madura, Podrida)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Dureza de un mineral (Escala de Mohs del 1 al 10)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Jerarquía laboral (Pasante, Analista, Gerente, Director)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Nivel de acuerdo con una afirmación (Total desacuerdo a Total acuerdo)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Picante de una salsa (Suave, Medio, Picante, Extra Picante)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Calidad de un hotel (1 a 5 estrellas)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Estado de conservación de un libro (Excelente, Bueno, Regular, Malo)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+        { name: "Prioridad de un ticket de soporte (Baja, Media, Alta, Crítica)", type: "Cualitativa Ordinal", scale: "Ordinal" },
+
+        // Cuantitativas Discretas (Intervalo o Razón)
+        { name: "Año de acontecimiento histórico (Ej. 1789, 1945)", type: "Cuantitativa Discreta", scale: "Intervalo" },
+        { name: "Coeficiente Intelectual (CI)", type: "Cuantitativa Discreta", scale: "Intervalo" },
+        { name: "Puntuación en la escala SAT / examen estandarizado", type: "Cuantitativa Discreta", scale: "Intervalo" },
+        { name: "Número de hijos en una familia", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de automóviles vendidos en un mes", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de páginas de un libro", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Edad expresada en años cumplidos", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de materias aprobadas en el semestre", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de llamadas telefónicas recibidas al día", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de computadoras en un laboratorio", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de piezas defectuosas en un lote de producción", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de habitaciones en una casa", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de accidentes de tránsito en una intersección por semana", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de goles anotados en un partido de fútbol", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de clientes atendidos por un cajero", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de dientes con caries", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de empleados de una PYME", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de quejas recibidas en un centro de atención", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de seguidores en una red social", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de intentos fallidos para ingresar una contraseña", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de animales en un zoológico", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de productos comprados en el supermercado", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de faltas cometidas por un equipo de baloncesto", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Número de terremotos registrados en un país durante un año", type: "Cuantitativa Discreta", scale: "Razón" },
+        { name: "Cantidad de asignaturas cursadas", type: "Cuantitativa Discreta", scale: "Razón" },
+
+        // Cuantitativas Continuas (Intervalo o Razón)
+        { name: "Temperatura ambiental en grados Celsius (°C)", type: "Cuantitativa Continua", scale: "Intervalo" },
+        { name: "Temperatura ambiental en grados Fahrenheit (°F)", type: "Cuantitativa Continua", scale: "Intervalo" },
+        { name: "Hora del día en formato continuo (Ej. 14.5 horas)", type: "Cuantitativa Continua", scale: "Intervalo" },
+        { name: "Estatura de una persona en metros", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Peso corporal en kilogramos", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Tiempo necesario para completar una carrera (en segundos)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Salario mensual de un trabajador (en USD)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Distancia entre dos ciudades (en kilómetros)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Volumen de agua consumido al día (en litros)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Velocidad de un vehículo en la autopista (km/h)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Nivel de glucosa en la sangre (mg/dL)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Presión arterial sistólica (mm Hg)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Área de un terreno en metros cuadrados", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Consumo de energía eléctrica (en kWh)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Concentración de CO2 en la atmósfera (ppm)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Duración de una llamada telefónica (en minutos y segundos)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Masa de un componente químico (en gramos)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Porcentaje de humedad relativa en el aire", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Capacidad de almacenamiento utilizada en un disco duro (GB)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Grosor de una lámina de aluminio (en mm)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Precipitación pluvial registrada (en mm de agua)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Precio de un producto financiero / acción (USD)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Tiempo de espera en la fila de un banco", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Intensidad del sonido en decibelios (dB)", type: "Cuantitativa Continua", scale: "Razón" },
+        { name: "Profundidad de un lago en metros", type: "Cuantitativa Continua", scale: "Razón" }
+    ];
+
+    // Estado del Juego
+    let students = [];
+    let currentGame = {
+        player: "Invitado",
+        totalQuestions: 10,
+        currentQuestionIndex: 0,
+        score: 0,
+        questions: [],
+        history: []
+    };
+
+    // Elementos DOM
+    const setupScreen = document.getElementById('setup-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const resultsScreen = document.getElementById('results-screen');
+
+    const studentSelect = document.getElementById('student-select');
+    const studentListInput = document.getElementById('student-list');
+    const btnUpdateStudents = document.getElementById('btn-update-students');
+    const questionCountInput = document.getElementById('question-count');
+
+    const btnStart = document.getElementById('btn-start');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnRestart = document.getElementById('btn-restart');
+
+    const hudPlayer = document.getElementById('hud-player');
+    const hudProgress = document.getElementById('hud-progress');
+    const hudScore = document.getElementById('hud-score');
+    const variableDisplay = document.getElementById('variable-display');
+    const feedback = document.getElementById('feedback');
+
+    // Manejo de estudiantes
+    btnUpdateStudents.addEventListener('click', updateStudentDropdown);
+
+    function updateStudentDropdown() {
+        const text = studentListInput.value.trim();
+        studentSelect.innerHTML = '<option value="">-- Modo Anónimo / Invitado --</option>';
+        
+        if (text) {
+            students = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+            students.forEach(student => {
+                const opt = document.createElement('option');
+                opt.value = student;
+                opt.textContent = student;
+                studentSelect.appendChild(opt);
+            });
+        }
+    }
+
+    // Algoritmo para mezclar un arreglo (Fisher-Yates)
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // Iniciar Juego sin repetición inmediata de preguntas
+    btnStart.addEventListener('click', () => {
+        const count = parseInt(questionCountInput.value);
+        if (isNaN(count) || count < 1 || count > 200) {
+            alert("Por favor ingresa un número de preguntas válido entre 1 y 200.");
+            return;
+        }
+
+        currentGame.player = studentSelect.value || "Invitado";
+        currentGame.totalQuestions = count;
+        currentGame.currentQuestionIndex = 0;
+        currentGame.score = 0;
+        currentGame.history = [];
+
+        // Generar preguntas garantizando baja repetición
+        currentGame.questions = [];
+        let pool = shuffleArray(database);
+
+        while (currentGame.questions.length < count) {
+            if (pool.length === 0) {
+                pool = shuffleArray(database); // Si el usuario pide más de 100, vuelve a mezclar el banco
+            }
+            currentGame.questions.push(pool.pop());
+        }
+
+        // Configurar UI
+        hudPlayer.textContent = currentGame.player;
+        hudScore.textContent = "0";
+        
+        setupScreen.classList.remove('active');
+        gameScreen.classList.add('active');
+
+        loadQuestion();
+    });
+
+    // Cargar Pregunta
+    function loadQuestion() {
+        const q = currentGame.questions[currentGame.currentQuestionIndex];
+        variableDisplay.textContent = q.name;
+        hudProgress.textContent = `${currentGame.currentQuestionIndex + 1}/${currentGame.totalQuestions}`;
+        
+        document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+        feedback.style.display = 'none';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Responder";
+    }
+
+    // Procesar Respuesta
+    btnSubmit.addEventListener('click', () => {
+        if (btnSubmit.textContent === "Siguiente Pregunta") {
+            currentGame.currentQuestionIndex++;
+            if (currentGame.currentQuestionIndex < currentGame.totalQuestions) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+            return;
+        }
+
+        const selectedType = document.querySelector('input[name="var-type"]:checked');
+        const selectedScale = document.querySelector('input[name="scale-type"]:checked');
+
+        if (!selectedType || !selectedScale) {
+            alert("Por favor selecciona tanto el tipo de variable como la escala.");
+            return;
+        }
+
+        const currentVar = currentGame.questions[currentGame.currentQuestionIndex];
+        const isTypeCorrect = selectedType.value === currentVar.type;
+        const isScaleCorrect = selectedScale.value === currentVar.scale;
+        const isFullyCorrect = isTypeCorrect && isScaleCorrect;
+
+        if (isFullyCorrect) {
+            currentGame.score++;
+            hudScore.textContent = currentGame.score;
+            feedback.className = "feedback correct";
+            feedback.textContent = "¡Excelente! Ambas respuestas son correctas.";
+        } else {
+            feedback.className = "feedback incorrect";
+            feedback.textContent = `Incorrecto. Lo correcto era: Tipo [${currentVar.type}], Escala [${currentVar.scale}].`;
+        }
+
+        feedback.style.display = 'block';
+
+        currentGame.history.push({
+            variable: currentVar.name,
+            userAns: `${selectedType.value} / ${selectedScale.value}`,
+            correctAns: `${currentVar.type} / ${currentVar.scale}`,
+            isCorrect: isFullyCorrect
+        });
+
+        btnSubmit.textContent = "Siguiente Pregunta";
+    });
+
+    // Mostrar Resultados
+    function showResults() {
+        gameScreen.classList.remove('active');
+        resultsScreen.classList.add('active');
+
+        document.getElementById('result-player-name').textContent = `Estudiante: ${currentGame.player}`;
+        
+        const percentage = Math.round((currentGame.score / currentGame.totalQuestions) * 100);
+        document.getElementById('score-percentage').textContent = `${percentage}%`;
+        document.getElementById('score-details').textContent = 
+            `Respondiste correctamente ${currentGame.score} de ${currentGame.totalQuestions} preguntas.`;
+
+        const historyBody = document.getElementById('history-body');
+        historyBody.innerHTML = '';
+
+        currentGame.history.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.variable}</strong></td>
+                <td>${item.userAns}</td>
+                <td>${item.correctAns}</td>
+                <td class="${item.isCorrect ? 'status-ok' : 'status-err'}">
+                    ${item.isCorrect ? '✓ Correcto' : '✗ Incorrecto'}
+                </td>
+            `;
+            historyBody.appendChild(tr);
+        });
+    }
+
+    // Reiniciar Juego
+    btnRestart.addEventListener('click', () => {
+        resultsScreen.classList.remove('active');
+        setupScreen.classList.add('active');
+    });
+</script>
+
+</body>
+</html>
