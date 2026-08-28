@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Asistencia por Voz</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #e2e8f0;
+      --presente: #10b981;
+      --ausente: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+    h1, h2 { margin-bottom: 1rem; color: var(--text); }
+    
+    textarea { width: 100%; height: 180px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; resize: vertical; font-size: 0.95rem; margin-bottom: 1rem; }
+    
+    .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button { background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    button:hover { background-color: var(--primary-hover); }
+    button:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    button.btn-success { background-color: var(--presente); }
+    
+    /* Indicador de Estado */
+    .status-box { margin-top: 1rem; padding: 1rem; border-radius: 8px; background: #f1f5f9; text-align: center; }
+    .status-text { font-weight: bold; margin-top: 0.25rem; }
+    .listening { animation: pulse 1.5s infinite; color: var(--primary); }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Tabla de Resultados */
+    .table-container { max-height: 300px; overflow-y: auto; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; position: sticky; top: 0; }
+    
+    .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: bold; font-size: 0.85rem; }
+    .badge-10 { background: #d1fae5; color: #065f46; }
+    .badge-0 { background: #fee2e2; color: #991b1b; }
+    .badge-pending { background: #e2e8f0; color: #475569; }
+  </style>
+</head>
+<body>
+
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <h1>🎙️ Llamador de Lista Automático</h1>
+    <p>Dictado e identificación de respuestas por voz en tiempo real</p>
+  </div>
+
+  <div class="container">
+    <!-- Panel Izquierdo: Entrada y Controles -->
+    <div class="card">
+      <h2>1. Lista de Estudiantes</h2>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">Ingresa un estudiante por línea:</p>
+      <textarea id="estudiantesInput" placeholder="Juan Pérez&#10;María Gómez&#10;Carlos López"></textarea>
+      
+      <div class="btn-group">
+        <button id="btnIniciar" onclick="iniciarLlamado()">▶️ Llamar Lista</button>
+        <button id="btnDetener" onclick="detenerLlamado()" disabled style="background-color: var(--ausente);">⏹️ Detener</button>
+      </div>
+
+      <div class="status-box">
+        <span style="font-size: 0.85rem; color: #64748b;">Estado del sistema:</span>
+        <div id="statusText" class="status-text">Esperando inicio...</div>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Registro y Descarga -->
+    <div class="card">
+      <h2>2. Registro de Asistencia</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Puntaje</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuerpo">
+            <tr><td colspan="2" style="text-align:center; color: #94a3b8;">No se ha cargado la lista</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button id="btnDescargar" class="btn-success" onclick="descargarCSV()" disabled>📥 Descargar Resultado (.csv)</button>
+    </div>
+  </div>
+
+  <script>
+    let estudiantes = [];
+    let registro = {};
+    let indiceActual = 0;
+    let recognition = null;
+    let synth = window.speechSynthesis;
+    let esperandoRespuesta = false;
+    let timeoutSilencio = null;
+
+    // Verificar soporte de API de Voz
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta el reconocimiento de voz. Usa Google Chrome o Microsoft Edge.");
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        clearTimeout(timeoutSilencio);
+        const respuesta = event.results[0][0].transcript.toLowerCase().trim();
+        actualizarEstado(`Escuchado: "${respuesta}"`);
+
+        // Comprobar si respondió "presente"
+        if (respuesta.includes("presente")) {
+          marcarAsistencia(estudiantes[indiceActual], 10);
+        } else {
+          marcarAsistencia(estudiantes[indiceActual], 0);
+        }
+        siguienteEstudiante();
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("Error/Silencio detectado:", event.error);
+      };
+
+      recognition.onend = () => {
+        // Si la escucha se cierra sin procesar y seguíamos esperando, se marca 0
+        if (esperandoRespuesta) {
+          marcarAsistencia(estudiantes[indiceActual], 0);
+          siguienteEstudiante();
+        }
+      };
+    }
+
+    function iniciarLlamado() {
+      const rawText = document.getElementById('estudiantesInput').value.trim();
+      if (!rawText) return alert("Por favor ingresa al menos un estudiante.");
+
+      estudiantes = rawText.split('\n').map(e => e.trim()).filter(e => e.length > 0);
+      registro = {};
+      indiceActual = 0;
+
+      estudiantes.forEach(est => registro[est] = null);
+      renderTabla();
+
+      document.getElementById('btnIniciar').disabled = true;
+      document.getElementById('btnDetener').disabled = false;
+      document.getElementById('btnDescargar').disabled = true;
+      document.getElementById('estudiantesInput').disabled = true;
+
+      procesarEstudianteActual();
+    }
+
+    function procesarEstudianteActual() {
+      if (indiceActual >= estudiantes.length) {
+        finalizarLlamado();
+        return;
+      }
+
+      const nombre = estudiantes[indiceActual];
+      actualizarEstado(`Llamando a: <strong>${nombre}</strong>`, true);
+
+      // Decir el nombre por el parlante
+      const utterance = new SpeechSynthesisUtterance(nombre);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.9;
+
+      utterance.onend = () => {
+        // Escuchar micrófono tras dictar el nombre
+        esperandoRespuesta = true;
+        try {
+          recognition.start();
+          actualizarEstado(`Escuchando a <strong>${nombre}</strong>...`, true);
+          
+          // Límite de tiempo de 4 segundos para responder
+          timeoutSilencio = setTimeout(() => {
+            if (esperandoRespuesta) {
+              try { recognition.stop(); } catch(e){}
+            }
+          }, 4000);
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      synth.speak(utterance);
+    }
+
+    function marcarAsistencia(nombre, valor) {
+      esperandoRespuesta = false;
+      registro[nombre] = valor;
+      renderTabla();
+    }
+
+    function siguienteEstudiante() {
+      indiceActual++;
+      setTimeout(procesarEstudianteActual, 1000); // Pausa de 1s entre estudiantes
+    }
+
+    function finalizarLlamado() {
+      actualizarEstado("✅ Llamado de lista finalizado.");
+      document.getElementById('btnIniciar').disabled = false;
+      document.getElementById('btnDetener').disabled = true;
+      document.getElementById('btnDescargar').disabled = false;
+      document.getElementById('estudiantesInput').disabled = false;
+      
+      const audioFinal = new SpeechSynthesisUtterance("Llamado de lista finalizado");
+      audioFinal.lang = 'es-ES';
+      synth.speak(audioFinal);
+    }
+
+    function detenerLlamado() {
+      synth.cancel();
+      esperandoRespuesta = false;
+      clearTimeout(timeoutSilencio);
+      if (recognition) try { recognition.stop(); } catch(e){}
+      actualizarEstado("Proceso detenido.");
+      document.getElementById('btnIniciar').disabled = false;
+      document.getElementById('btnDetener').disabled = true;
+      document.getElementById('estudiantesInput').disabled = false;
+    }
+
+    function renderTabla() {
+      const tbody = document.getElementById('tablaCuerpo');
+      tbody.innerHTML = '';
+
+      estudiantes.forEach(est => {
+        const val = registro[est];
+        let badgeHTML = '<span class="badge badge-pending">Pendiente</span>';
+        if (val === 10) badgeHTML = '<span class="badge badge-10">10 (Presente)</span>';
+        if (val === 0) badgeHTML = '<span class="badge badge-0">0 (Ausente)</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${est}</td><td>${badgeHTML}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function actualizarEstado(htmlText, isListening = false) {
+      const elem = document.getElementById('statusText');
+      elem.innerHTML = htmlText;
+      if (isListening) {
+        elem.classList.add('listening');
+      } else {
+        elem.classList.remove('listening');
+      }
+    }
+
+    function descargarCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Estudiante,Asistencia\n";
+      for (const [nombre, valor] of Object.entries(registro)) {
+        csvContent += `"${nombre}",${valor !== null ? valor : 0}\n`;
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `asistencia_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
