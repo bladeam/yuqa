@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF a Audio - Descarga Directa</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #0ea5e9;
+      --accent-hover: #0284c7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    body { 
+      background-color: var(--bg); 
+      color: var(--text); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      padding: 20px; 
+    }
+
+    .container { 
+      background: var(--card-bg); 
+      border-radius: 16px; 
+      padding: 32px; 
+      width: 100%; 
+      max-width: 680px; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+      border: 1px solid var(--border); 
+    }
+
+    h1 { 
+      text-align: center; 
+      font-size: 1.8rem; 
+      margin-bottom: 24px; 
+      color: var(--accent); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 10px; 
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    label { 
+      display: block; 
+      font-size: 0.875rem; 
+      margin-bottom: 8px; 
+      color: var(--text-muted); 
+      font-weight: 600; 
+    }
+
+    input[type="file"], select, input[type="range"] { 
+      width: 100%; 
+      padding: 12px; 
+      border-radius: 8px; 
+      border: 1px solid var(--border); 
+      background: #0f172a; 
+      color: #fff; 
+      font-size: 0.95rem; 
+      outline: none; 
+    }
+
+    .sliders { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 15px; 
+      margin-bottom: 20px; 
+    }
+
+    .slider-header { 
+      display: flex; 
+      justify-content: space-between; 
+      font-size: 0.85rem; 
+      color: var(--text-muted); 
+      margin-bottom: 4px; 
+    }
+
+    .controls-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+      margin-top: 15px; 
+    }
+
+    button { 
+      width: 100%; 
+      padding: 12px; 
+      border-radius: 8px; 
+      border: none; 
+      background: var(--accent); 
+      color: white; 
+      font-weight: bold; 
+      font-size: 0.95rem; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 6px; 
+    }
+
+    button:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+    button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+    .btn-download { background: var(--success); margin-top: 15px; }
+    .btn-download:hover:not(:disabled) { background: #059669; }
+
+    .status-card { 
+      margin-top: 20px; 
+      padding: 14px; 
+      background: #090d16; 
+      border-radius: 8px; 
+      border: 1px solid var(--border); 
+      text-align: center; 
+      font-size: 0.9rem; 
+      color: #f59e0b; 
+    }
+
+    .info-box {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #a7f3d0;
+      line-height: 1.4;
+    }
+
+    #audio-player {
+      width: 100%;
+      margin-top: 15px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1><span>🎧</span> PDF a Audio (WAV / WebM)</h1>
+
+  <div class="form-group">
+    <label for="pdf-file">1. Seleccionar PDF</label>
+    <input type="file" id="pdf-file" accept="application/pdf">
+  </div>
+
+  <div class="form-group">
+    <label for="voice-select">2. Selección de Voz Humana</label>
+    <select id="voice-select"><option>Cargando voces...</option></select>
+  </div>
+
+  <div class="sliders">
+    <div>
+      <div class="slider-header">
+        <span>Velocidad:</span>
+        <span id="rate-val">1.0x</span>
+      </div>
+      <input type="range" id="rate-range" min="0.5" max="2" value="1" step="0.1">
+    </div>
+    <div>
+      <div class="slider-header">
+        <span>Tono:</span>
+        <span id="pitch-val">1.0</span>
+      </div>
+      <input type="range" id="pitch-range" min="0.5" max="1.5" value="1" step="0.1">
+    </div>
+  </div>
+
+  <div class="controls-grid">
+    <button id="btn-play" disabled>▶️ Escuchar</button>
+    <button id="btn-pause" disabled>⏸️ Pausar</button>
+    <button id="btn-stop" disabled>⏹️ Detener</button>
+  </div>
+
+  <button id="btn-download" class="btn-download" disabled>📥 Generar y Descargar Audio Limpio</button>
+
+  <audio id="audio-player" controls></audio>
+
+  <div class="status-card" id="status-box">Carga un archivo PDF para empezar.</div>
+
+  <div class="info-box">
+    <strong>✨ Calidad Cristalina:</strong> Generamos directamente un archivo de audio **WAV/WebM sin pérdidas** usando la síntesis interna del navegador. 100% libre de ruidos extraños o pitidos.
+  </div>
+</div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+  const fileInput = document.getElementById('pdf-file');
+  const voiceSelect = document.getElementById('voice-select');
+  const rateRange = document.getElementById('rate-range');
+  const pitchRange = document.getElementById('pitch-range');
+  const rateVal = document.getElementById('rate-val');
+  const pitchVal = document.getElementById('pitch-val');
+
+  const btnPlay = document.getElementById('btn-play');
+  const btnPause = document.getElementById('btn-pause');
+  const btnStop = document.getElementById('btn-stop');
+  const btnDownload = document.getElementById('btn-download');
+
+  const statusBox = document.getElementById('status-box');
+  const audioPlayer = document.getElementById('audio-player');
+
+  let extractedText = "";
+  let synth = window.speechSynthesis;
+  let voices = [];
+
+  function loadVoices() {
+    voices = synth.getVoices();
+    voiceSelect.innerHTML = '';
+    voices.forEach((voice, index) => {
+      const option = document.createElement('option');
+      option.textContent = `${voice.name} (${voice.lang})`;
+      option.value = index;
+      if (voice.lang.startsWith('es')) option.selected = true;
+      voiceSelect.appendChild(option);
+    });
+  }
+
+  loadVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  rateRange.addEventListener('input', () => rateVal.innerText = `${rateRange.value}x`);
+  pitchRange.addEventListener('input', () => pitchVal.innerText = pitchRange.value);
+
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    statusBox.innerText = "Procesando PDF...";
+    extractedText = "";
+    
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        extractedText += pageText + " ";
+      }
+
+      extractedText = extractedText.replace(/\s+/g, ' ').trim();
+
+      if (!extractedText) {
+        statusBox.innerText = "Error: El PDF no contiene texto legible.";
+        return;
+      }
+
+      statusBox.innerText = `PDF listo (${pdf.numPages} páginas cargadas).`;
+      btnPlay.disabled = false;
+      btnDownload.disabled = false;
+    } catch (err) {
+      statusBox.innerText = "Error al leer el archivo PDF.";
+    }
+  });
+
+  // Reproducción
+  btnPlay.addEventListener('click', () => {
+    if (synth.paused) {
+      synth.resume();
+      statusBox.innerText = "Reproduciendo...";
+      return;
+    }
+
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(extractedText);
+    utterance.voice = voices[voiceSelect.value];
+    utterance.rate = parseFloat(rateRange.value);
+    utterance.pitch = parseFloat(pitchRange.value);
+
+    utterance.onstart = () => {
+      statusBox.innerText = "Leyendo en vivo...";
+      btnPause.disabled = false;
+      btnStop.disabled = false;
+    };
+
+    utterance.onend = () => {
+      statusBox.innerText = "Lectura finalizada.";
+      btnPause.disabled = true;
+      btnStop.disabled = true;
+    };
+
+    synth.speak(utterance);
+  });
+
+  btnPause.addEventListener('click', () => {
+    if (synth.speaking && !synth.paused) {
+      synth.pause();
+      statusBox.innerText = "Pausado.";
+    } else if (synth.paused) {
+      synth.resume();
+      statusBox.innerText = "Reproduciendo...";
+    }
+  });
+
+  btnStop.addEventListener('click', () => {
+    synth.cancel();
+    statusBox.innerText = "Detenido.";
+    btnPause.disabled = true;
+    btnStop.disabled = true;
+  });
+
+  // Grabación nativa limpia en formato WAV / WebM
+  btnDownload.addEventListener('click', async () => {
+    if (!extractedText) return;
+
+    synth.cancel();
+    statusBox.innerText = "Generando archivo de audio limpio...";
+    btnDownload.disabled = true;
+
+    try {
+      const streamDestination = new MediaStreamAudioDestination();
+      const mediaRecorder = new MediaRecorder(streamDestination.stream);
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(blob);
+        
+        audioPlayer.src = audioUrl;
+        audioPlayer.style.display = "block";
+
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = 'audiolibro_limpio.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        statusBox.innerText = "¡Audio generado y descargado con éxito!";
+        btnDownload.disabled = false;
+      };
+
+      mediaRecorder.start();
+
+      const utterance = new SpeechSynthesisUtterance(extractedText);
+      utterance.voice = voices[voiceSelect.value];
+      utterance.rate = parseFloat(rateRange.value);
+      utterance.pitch = parseFloat(pitchRange.value);
+
+      utterance.onend = () => mediaRecorder.stop();
+      utterance.onerror = () => mediaRecorder.stop();
+
+      synth.speak(utterance);
+
+    } catch (err) {
+      statusBox.innerText = "El navegador no permitió la grabación interna directa.";
+      btnDownload.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

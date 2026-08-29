@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF a Audio Reader & Downloader</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .container { background: #1e293b; border-radius: 12px; padding: 30px; width: 100%; max-width: 650px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    h1 { text-align: center; font-size: 1.8rem; margin-bottom: 20px; color: #38bdf8; }
+    .control-group { margin-bottom: 15px; }
+    label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: #94a3b8; }
+    input[type="file"], select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 0.95rem; outline: none; }
+    select:focus, input:focus { border-color: #38bdf8; }
+    .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    button { cursor: pointer; font-weight: bold; background: #2563eb; transition: background 0.2s ease; }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+    #status { margin-top: 15px; font-size: 0.85rem; color: #f59e0b; text-align: center; min-height: 1.2em; }
+    #text-preview { margin-top: 20px; padding: 12px; background: #0f172a; border-radius: 8px; max-height: 120px; overflow-y: auto; font-size: 0.85rem; color: #cbd5e1; border: 1px solid #334155; display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📄 PDF a Audio Reader</h1>
+
+  <div class="control-group">
+    <label for="pdf-file">Seleccionar archivo PDF</label>
+    <input type="file" id="pdf-file" accept="application/pdf">
+  </div>
+
+  <div class="control-group">
+    <label for="voice-select">Seleccionar Voz</label>
+    <select id="voice-select"><option>Cargando voces...</option></select>
+  </div>
+
+  <div class="buttons">
+    <button id="btn-play" disabled>▶️ Reproducir</button>
+    <button id="btn-stop" disabled>⏹️ Detener</button>
+  </div>
+
+  <div class="buttons" style="grid-template-columns: 1fr;">
+    <button id="btn-download" disabled style="background: #059669;">📥 Generar & Descargar Audio</button>
+  </div>
+
+  <div id="status">Carga un archivo PDF para comenzar.</div>
+  <div id="text-preview"></div>
+</div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+  const fileInput = document.getElementById('pdf-file');
+  const voiceSelect = document.getElementById('voice-select');
+  const btnPlay = document.getElementById('btn-play');
+  const btnStop = document.getElementById('btn-stop');
+  const btnDownload = document.getElementById('btn-download');
+  const status = document.getElementById('status');
+  const preview = document.getElementById('text-preview');
+
+  let extractedText = "";
+  let synth = window.speechSynthesis;
+  let voices = [];
+
+  // Cargar las voces disponibles en el navegador
+  function populateVoices() {
+    voices = synth.getVoices();
+    voiceSelect.innerHTML = '';
+    voices.forEach((voice, index) => {
+      const option = document.createElement('option');
+      option.textContent = `${voice.name} (${voice.lang})`;
+      option.setAttribute('data-index', index);
+      voiceSelect.appendChild(option);
+    });
+  }
+
+  populateVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = populateVoices;
+  }
+
+  // Leer y extraer texto del PDF
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    status.innerText = "Extrayendo texto del PDF...";
+    extractedText = "";
+    
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(" ");
+        extractedText += pageText + " ";
+      }
+
+      if (extractedText.trim().length === 0) {
+        status.innerText = "No se pudo extraer texto. (El PDF podría ser una imagen escaneada).";
+        return;
+      }
+
+      status.innerText = `Éxito: Se extrajeron ${pdf.numPages} páginas.`;
+      preview.style.display = "block";
+      preview.innerText = extractedText.substring(0, 300) + "...";
+
+      btnPlay.disabled = false;
+      btnDownload.disabled = false;
+    } catch (err) {
+      status.innerText = "Error al procesar el PDF.";
+      console.error(err);
+    }
+  });
+
+  // Reproducción en tiempo real
+  btnPlay.addEventListener('click', () => {
+    if (synth.speaking) synth.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(extractedText);
+    const selectedVoiceIndex = voiceSelect.selectedOptions[0].getAttribute('data-index');
+    utterance.voice = voices[selectedVoiceIndex];
+    
+    utterance.onstart = () => { status.innerText = "Reproduciendo..."; btnStop.disabled = false; };
+    utterance.onend = () => { status.innerText = "Reproducción finalizada."; btnStop.disabled = true; };
+
+    synth.speak(utterance);
+  });
+
+  btnStop.addEventListener('click', () => {
+    synth.cancel();
+    status.innerText = "Reproducción detenida.";
+    btnStop.disabled = true;
+  });
+
+  // Generación y descarga de archivo de audio capturando la síntesis
+  btnDownload.addEventListener('click', async () => {
+    status.innerText = "Grabando audio... (Escuchando en segundo plano)";
+    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+    const mediaRecorder = new MediaRecorder(dest.stream);
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pdf-audio.webm';
+      a.click();
+      status.innerText = "¡Descarga iniciada!";
+    };
+
+    const utterance = new SpeechSynthesisUtterance(extractedText);
+    const selectedVoiceIndex = voiceSelect.selectedOptions[0].getAttribute('data-index');
+    utterance.voice = voices[selectedVoiceIndex];
+
+    mediaRecorder.start();
+    synth.speak(utterance);
+
+    utterance.onend = () => {
+      mediaRecorder.stop();
+    };
+  });
+</script>
+</body>
+</html>
