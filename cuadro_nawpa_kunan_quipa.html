@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Automático de Fichas de Conjugación Quechua</title>
+    <!-- Librería html2pdf.js para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --border-color: #94a3b8;
+            --bg-gray: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #e2e8f0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        /* Panel de Control */
+        .control-panel {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .control-panel h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .control-panel p {
+            font-size: 0.9rem;
+            color: #475569;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #334155;
+        }
+
+        /* Entrada de lista de verbos con scroll vertical */
+        .scroll-textarea {
+            width: 100%;
+            height: 140px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            resize: none;
+            overflow-y: scroll;
+            white-space: pre;
+            line-height: 1.4;
+            background-color: #f8fafc;
+        }
+
+        .scroll-textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .scroll-textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .scroll-textarea::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e40af;
+        }
+
+        .btn-success {
+            background-color: #059669;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #047857;
+        }
+
+        /* Hoja A4 para Vista Previa y PDF */
+        .pdf-preview {
+            background: white;
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Encabezado */
+        .doc-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .doc-description {
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        /* Bloque de Datos de Estudiantes */
+        .students-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--bg-gray);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .students-header {
+            background-color: #cbd5e1;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .students-grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            padding: 10px;
+        }
+
+        .student-box {
+            display: table-cell;
+            width: 50%;
+            padding: 0 8px;
+            vertical-align: top;
+        }
+
+        .student-card {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .student-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+        }
+
+        .field-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .field-label {
+            display: table-cell;
+            width: 65px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .field-line {
+            display: table-cell;
+            border-bottom: 1px dotted #94a3b8;
+            height: 14px;
+        }
+
+        .signature-line {
+            margin-top: 22px;
+            border-top: 1px solid #94a3b8;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            padding-top: 3px;
+        }
+
+        /* Tabla Principal de Verbos */
+        .verbs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .verbs-table th, .verbs-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .verbs-table th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .blank-cell {
+            background-color: #ffffff;
+            height: 48px;
+        }
+
+        .dotted-subline {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            font-weight: normal;
+        }
+
+        .pronoun-tag {
+            font-size: 0.75rem;
+            color: #475569;
+            font-weight: normal;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Ocultar interfaz en modo impresión manual */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .pdf-preview {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Panel de Control -->
+    <div class="control-panel no-print">
+        <h2>Generador de Fichas de Conjugación en Quechua</h2>
+        <p>Ingresa los verbos en infinitivo (uno por fila). El programa calculará las conjugaciones e incluirá puntos suspensivos en cada casilla para la traducción al español.</p>
+        
+        <div class="config-grid">
+            <div>
+                <label for="verbsInput">Lista de Verbos en Infinitivo (un verbo por fila):</label>
+                <textarea id="verbsInput" class="scroll-textarea" placeholder="puñuy&#10;puriy&#10;takiy&#10;ruway&#10;mikuy&#10;rantiy"></textarea>
+            </div>
+            <div>
+                <label for="personSelect">Sujeto / Persona Gramatical:</label>
+                <select id="personSelect" onchange="updateDocument()">
+                    <option value="mixed" selected>🔀 Mezclado (Pronombres intercalados por fila)</option>
+                    <option value="1s">Primera persona singular - Ñuqa (Yo)</option>
+                    <option value="2s">Segunda persona singular - Qam (Tú)</option>
+                    <option value="3s">Tercera persona singular - Pay (Él/Ella)</option>
+                    <option value="1pi">Primera persona plural incl. - Ñuqanchik (Nosotros)</option>
+                    <option value="1pe">Primera persona plural excl. - Ñuqayku (Nosotros)</option>
+                    <option value="2p">Segunda persona plural - Qamkuna (Ustedes)</option>
+                    <option value="3p">Tercera persona plural - Paykuna (Ellos)</option>
+                </select>
+
+                <label for="patternSelect" style="margin-top: 15px;">Modo de Casillas para Completar:</label>
+                <select id="patternSelect" onchange="updateDocument()">
+                    <option value="past_future_blank">Mostrar Presente / Dejar Pasado y Futuro en blanco</option>
+                    <option value="alternate">Alternar casillas en blanco por fila</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-primary" onclick="updateDocument()">Generar Tabla</button>
+            <button class="btn-success" onclick="downloadPDF()">Descargar PDF</button>
+        </div>
+    </div>
+
+    <!-- Documento A4 / Vista Previa -->
+    <div id="document-area" class="pdf-preview">
+        
+        <div class="doc-title">1. Cuadro de Transformación Temporal (Pasado - Presente - Futuro)</div>
+        <div class="doc-description">
+            Un formato en tabla donde el estudiante completa la conjugación en los diferentes tiempos verbales y escribe la traducción en español sobre la línea punteada de cada casillero.
+        </div>
+
+        <!-- Datos de los Estudiantes -->
+        <div class="students-container">
+            <div class="students-header">DATOS DE LOS ESTUDIANTES (TRABAJO EN PAREJA / INDIVIDUAL)</div>
+            <div class="students-grid">
+                
+                <!-- Estudiante 1 -->
+                <div class="student-box">
+                    <div class="student-card">
+                        <div class="student-title">ESTUDIANTE 1</div>
+                        <div class="field-row">
+                            <span class="field-label">Apellidos:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Nombres:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Carrera:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">C.I.:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Fecha:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="signature-line">Firma Estudiante 1</div>
+                    </div>
+                </div>
+
+                <!-- Estudiante 2 -->
+                <div class="student-box">
+                    <div class="student-card">
+                        <div class="student-title">ESTUDIANTE 2</div>
+                        <div class="field-row">
+                            <span class="field-label">Apellidos:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Nombres:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Carrera:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">C.I.:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="field-row">
+                            <span class="field-label">Fecha:</span>
+                            <span class="field-line"></span>
+                        </div>
+                        <div class="signature-line">Firma Estudiante 2</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Tabla de Verbos sin columna extra de traducción -->
+        <table class="verbs-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Verbo (Raíz)</th>
+                    <th style="width: 25%;">Presente</th>
+                    <th style="width: 25%;">Pasado (<i>-rqa</i>)</th>
+                    <th style="width: 25%;">Futuro</th>
+                </tr>
+            </thead>
+            <tbody id="verbsTbody">
+                <!-- Se construye dinámicamente -->
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<script>
+    // Matriz de sufijos según pronombre y tiempo verbal
+    const suffixes = {
+        '1s':  { name: 'Ñuqa (Yo)',          pres: 'ni',      pas: 'rqani',      fut: 'saq' },
+        '2s':  { name: 'Qam (Tú)',          pres: 'nki',     pas: 'rqanki',     fut: 'nki' },
+        '3s':  { name: 'Pay (Él/Ella)',     pres: 'n',       pas: 'rqa',        fut: 'nqa' },
+        '1pi': { name: 'Ñuqanchik (Nos.)', pres: 'nchik',   pas: 'rqanchik',   fut: 'sunchik' },
+        '1pe': { name: 'Ñuqayku (Nos. ex)', pres: 'yku',     pas: 'rqayku',     fut: 'sayku' },
+        '2p':  { name: 'Qamkuna (Uds.)',    pres: 'nkichik', pas: 'rqankichik', fut: 'nkichik' },
+        '3p':  { name: 'Paykuna (Ellos)',   pres: 'nku',     pas: 'rqanku',     fut: 'nqanku' }
+    };
+
+    const mixedKeys = ['1s', '2s', '3s', '1pi', '1pe', '2p', '3p'];
+
+    document.getElementById('verbsInput').value = "puñuy\npuriy\ntakiy\nruway\nmikhuy\nrantiy";
+
+    function getStem(verb) {
+        let clean = verb.trim();
+        if (clean.toLowerCase().endsWith('y')) {
+            clean = clean.slice(0, -1);
+        }
+        return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + '-';
+    }
+
+    function updateDocument() {
+        const input = document.getElementById('verbsInput').value;
+        const personOption = document.getElementById('personSelect').value;
+        const patternMode = document.getElementById('patternSelect').value;
+        
+        const tbody = document.getElementById('verbsTbody');
+        tbody.innerHTML = '';
+
+        const rawVerbs = input.split('\n').map(v => v.trim()).filter(v => v.length > 0);
+
+        rawVerbs.forEach((verb, index) => {
+            const stem = getStem(verb);
+            const baseStem = stem.slice(0, -1);
+
+            let personKey = personOption;
+            if (personOption === 'mixed') {
+                personKey = mixedKeys[index % mixedKeys.length];
+            }
+
+            const current = suffixes[personKey];
+
+            const presConj = baseStem + current.pres;
+            const pasConj = baseStem + current.pas;
+            const futConj = baseStem + current.fut;
+
+            let cPres = presConj;
+            let cPas = pasConj;
+            let cFut = futConj;
+
+            if (patternMode === 'past_future_blank') {
+                cPas = '';
+                cFut = '';
+            } else {
+                const step = index % 3;
+                if (step === 0) {
+                    cPas = ''; cFut = '';
+                } else if (step === 1) {
+                    cPres = ''; cFut = '';
+                } else {
+                    cPres = ''; cPas = '';
+                }
+            }
+
+            const pronounSubtext = personOption === 'mixed' 
+                ? `<span class="pronoun-tag">(${current.name})</span>` 
+                : '';
+
+            // Función para renderizar el contenido de cada celda con puntitos para la traducción
+            const renderCell = (conj) => {
+                if (conj) {
+                    return `<i>${conj}</i><span class="dotted-subline">..........................</span>`;
+                } else {
+                    return `<span class="dotted-subline" style="margin-top: 24px;">..........................</span>`;
+                }
+            };
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <b>${stem}</b> 
+                    ${pronounSubtext}
+                    <span class="dotted-subline">..........................</span>
+                </td>
+                <td class="${cPres ? '' : 'blank-cell'}">${renderCell(cPres)}</td>
+                <td class="${cPas ? '' : 'blank-cell'}">${renderCell(cPas)}</td>
+                <td class="${cFut ? '' : 'blank-cell'}">${renderCell(cFut)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('document-area');
+        const opt = {
+            margin:       10,
+            filename:     'Cuadro_Transformacion_Temporal_Final.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+    }
+
+    window.onload = updateDocument;
+</script>
+
+</body>
+</html>

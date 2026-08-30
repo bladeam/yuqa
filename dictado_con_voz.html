@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictado Didáctico de Quechua</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --primary: #2c3e50;
+      --accent: #27ae60;
+      --warning: #f39c12;
+      --danger: #c0392b;
+      --text: #333333;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-top: 0;
+    }
+
+    .grid-config {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      background: #eef2f7;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: var(--primary);
+    }
+
+    input, select, textarea {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      resize: vertical;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    #btn-start { background-color: var(--accent); }
+    #btn-pause { background-color: var(--warning); }
+    #btn-stop { background-color: var(--danger); }
+
+    .status-panel {
+      border: 2px dashed #b0bec5;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      background-color: #fafafa;
+    }
+
+    .active-sentence {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0 5px 0;
+      min-height: 30px;
+    }
+
+    .repeat-indicator {
+      font-size: 0.95rem;
+      color: #e67e22;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .timer {
+      font-size: 1.1rem;
+      color: #7f8c8d;
+    }
+
+    .progress {
+      font-size: 0.9rem;
+      color: #95a5a6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Dictado Interactivo en Quechua</h1>
+
+  <div class="grid-config">
+    <div class="control-group">
+      <label for="pause-time">Pausa para copiar (seg):</label>
+      <input type="number" id="pause-time" value="10" min="1" max="60">
+    </div>
+    <div class="control-group">
+      <label for="repeat-count">Repeticiones por frase:</label>
+      <input type="number" id="repeat-count" value="3" min="1" max="10">
+    </div>
+    <div class="control-group">
+      <label for="rate">Velocidad de voz:</label>
+      <input type="range" id="rate" min="0.5" max="1.5" value="0.9" step="0.1">
+    </div>
+    <div class="control-group">
+      <label for="volume">Volumen:</label>
+      <input type="range" id="volume" min="0" max="1" value="1" step="0.1">
+    </div>
+    <div class="control-group" style="grid-column: span 2;">
+      <label for="voice-select">Voz detectada:</label>
+      <select id="voice-select"></select>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="text-input">Ingresa las oraciones en Quechua (una por línea):</label>
+    <textarea id="text-input">Allianllachu
+Imaynalla kachkanki?
+Sutiyomi Juan
+Paqarinkama
+Añay
+Maypintaquinki?
+Tanta munasqayki
+Nuqa quechuata yachani
+Tusuyta munani
+Tupananchiskama</textarea>
+  </div>
+
+  <div class="btn-group">
+    <button id="btn-start">Iniciar Dictado</button>
+    <button id="btn-pause">Pausar</button>
+    <button id="btn-stop">Detener</button>
+  </div>
+
+  <div class="status-panel">
+    <div class="progress" id="progress-text">Oración 0 de 0</div>
+    <div class="active-sentence" id="current-text">-- Listo para iniciar --</div>
+    <div class="repeat-indicator" id="repeat-text">Repetición 0 de 0</div>
+    <div class="timer" id="timer-text">Tiempo de espera: --</div>
+  </div>
+</div>
+
+<script>
+  const synth = window.speechSynthesis;
+  
+  // Elementos DOM
+  const textInput = document.getElementById('text-input');
+  const pauseInput = document.getElementById('pause-time');
+  const repeatInput = document.getElementById('repeat-count');
+  const rateInput = document.getElementById('rate');
+  const volumeInput = document.getElementById('volume');
+  const voiceSelect = document.getElementById('voice-select');
+  
+  const btnStart = document.getElementById('btn-start');
+  const btnPause = document.getElementById('btn-pause');
+  const btnStop = document.getElementById('btn-stop');
+  
+  const currentTextEl = document.getElementById('current-text');
+  const repeatTextEl = document.getElementById('repeat-text');
+  const timerTextEl = document.getElementById('timer-text');
+  const progressTextEl = document.getElementById('progress-text');
+
+  let sentences = [];
+  let currentIndex = 0;
+  let currentRepeat = 0;
+  let maxRepeats = 3;
+  let isPaused = false;
+  let isRunning = false;
+  let countdownTimer = null;
+  let voices = [];
+
+  function populateVoices() {
+    voices = synth.getVoices();
+    voiceSelect.innerHTML = '';
+    
+    let quechuaVoiceFound = false;
+
+    voices.forEach((voice, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      
+      if (voice.lang.toLowerCase().includes('qu')) {
+        option.selected = true;
+        quechuaVoiceFound = true;
+      }
+      voiceSelect.appendChild(option);
+    });
+
+    if (!quechuaVoiceFound && voices.length > 0) {
+      const esIndex = voices.findIndex(v => v.lang.startsWith('es'));
+      if (esIndex !== -1) voiceSelect.value = esIndex;
+    }
+  }
+
+  populateVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = populateVoices;
+  }
+
+  function startDictation() {
+    if (isRunning && isPaused) {
+      resumeDictation();
+      return;
+    }
+
+    const text = textInput.value.trim();
+    if (!text) {
+      alert("Por favor ingresa al menos una oración.");
+      return;
+    }
+
+    sentences = text.split('\n').filter(line => line.trim() !== '');
+    currentIndex = 0;
+    currentRepeat = 0;
+    maxRepeats = parseInt(repeatInput.value, 10) || 3;
+    isRunning = true;
+    isPaused = false;
+    btnPause.textContent = "Pausar";
+    
+    processSentence();
+  }
+
+  function processSentence() {
+    if (!isRunning || currentIndex >= sentences.length) {
+      finishDictation();
+      return;
+    }
+
+    const currentSentence = sentences[currentIndex].trim();
+    currentRepeat++;
+
+    progressTextEl.textContent = `Oración ${currentIndex + 1} de ${sentences.length}`;
+    currentTextEl.textContent = currentSentence;
+    repeatTextEl.textContent = `Lectura ${currentRepeat} de ${maxRepeats}`;
+    timerTextEl.textContent = "Reproduciendo...";
+
+    speakSentence(currentSentence, () => {
+      if (!isRunning || isPaused) return;
+
+      if (currentRepeat < maxRepeats) {
+        // Pausa corta de 2 segundos entre repeticiones de la misma oración
+        timerTextEl.textContent = "Pausa breve (2s)...";
+        countdownTimer = setTimeout(() => {
+          if (isRunning && !isPaused) {
+            processSentence();
+          }
+        }, 2000);
+      } else {
+        // Al terminar todas las repeticiones, iniciar el tiempo largo para que el estudiante anote
+        currentRepeat = 0;
+        startPauseTimer(parseInt(pauseInput.value, 10));
+      }
+    });
+  }
+
+  function speakSentence(text, onEndCallback) {
+    synth.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = parseFloat(rateInput.value);
+    utterance.volume = parseFloat(volumeInput.value);
+
+    if (voices[voiceSelect.value]) {
+      utterance.voice = voices[voiceSelect.value];
+    }
+
+    utterance.onend = () => {
+      if (onEndCallback) onEndCallback();
+    };
+
+    utterance.onerror = () => {
+      if (onEndCallback) onEndCallback();
+    };
+
+    synth.speak(utterance);
+  }
+
+  function startPauseTimer(seconds) {
+    let timeLeft = seconds;
+    timerTextEl.textContent = `Tiempo para anotar: ${timeLeft}s`;
+
+    countdownTimer = setInterval(() => {
+      if (!isPaused) {
+        timeLeft--;
+        if (timeLeft > 0) {
+          timerTextEl.textContent = `Tiempo para anotar: ${timeLeft}s`;
+        } else {
+          clearInterval(countdownTimer);
+          timerTextEl.textContent = "Siguiente oración...";
+          currentIndex++;
+          processSentence();
+        }
+      }
+    }, 1000);
+  }
+
+  function pauseDictation() {
+    if (!isRunning) return;
+
+    if (!isPaused) {
+      isPaused = true;
+      synth.pause();
+      clearTimeout(countdownTimer);
+      clearInterval(countdownTimer);
+      btnPause.textContent = "Reanudar";
+      timerTextEl.textContent = "(Dictado en pausa)";
+    } else {
+      resumeDictation();
+    }
+  }
+
+  function resumeDictation() {
+    isPaused = false;
+    btnPause.textContent = "Pausar";
+    if (synth.paused) {
+      synth.resume();
+    } else {
+      processSentence();
+    }
+  }
+
+  function stopDictation() {
+    synth.cancel();
+    clearTimeout(countdownTimer);
+    clearInterval(countdownTimer);
+    isRunning = false;
+    isPaused = false;
+    currentIndex = 0;
+    currentRepeat = 0;
+    
+    btnPause.textContent = "Pausar";
+    currentTextEl.textContent = "-- Dictado Detenido --";
+    repeatTextEl.textContent = "Repetición 0 de 0";
+    timerTextEl.textContent = "Tiempo de espera: --";
+    progressTextEl.textContent = "Oración 0 de 0";
+  }
+
+  function finishDictation() {
+    stopDictation();
+    currentTextEl.textContent = "¡Dictado finalizado!";
+  }
+
+  btnStart.addEventListener('click', startDictation);
+  btnPause.addEventListener('click', pauseDictation);
+  btnStop.addEventListener('click', stopDictation);
+</script>
+
+</body>
+</html>
