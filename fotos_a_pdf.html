@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertidor de Imágenes a PDF - Bladimir Arias</title>
+  
+  <!-- jsPDF CDN para generar el PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* Área de carga de archivos */
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      background: rgba(99, 102, 241, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 2rem;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #818cf8;
+      transform: translateY(-2px);
+    }
+
+    .drop-zone input {
+      display: none;
+    }
+
+    .drop-zone-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* Galería de imágenes */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+      cursor: grab;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .card:active {
+      cursor: grabbing;
+    }
+
+    .card.dragging {
+      opacity: 0.4;
+    }
+
+    .preview-container {
+      width: 100%;
+      height: 200px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      padding: 10px;
+    }
+
+    .preview-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .controls {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .scale-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .scale-control input {
+      width: 60%;
+      accent-color: var(--primary);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 0.4rem;
+      border: none;
+      border-radius: 4px;
+      background: #334155;
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #475569;
+    }
+
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    .btn-delete:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Botón de exportación */
+    .export-section {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .btn-export {
+      padding: 0.8rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-export:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-export:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    footer {
+      margin-top: auto;
+      padding-top: 3rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Convertidor de Imágenes a PDF</h1>
+    <p>Organiza, rota y escala tus imágenes antes de generar el documento</p>
+  </header>
+
+  <div class="container">
+    <!-- Zona Drag & Drop -->
+    <div class="drop-zone" id="dropZone">
+      <p>Arrastra y suelta tus imágenes aquí o</p>
+      <span class="drop-zone-btn">Seleccionar archivos</span>
+      <input type="file" id="fileInput" multiple accept="image/*">
+    </div>
+
+    <!-- Lista de tarjetas de imágenes -->
+    <div class="gallery" id="gallery"></div>
+
+    <!-- Botón de Generar PDF -->
+    <div class="export-section">
+      <button class="btn-export" id="generatePdfBtn" disabled>Generar y Descargar PDF</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>© Bladimir Arias. Todos los derechos reservados.</p>
+  </footer>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const gallery = document.getElementById('gallery');
+    const generatePdfBtn = document.getElementById('generatePdfBtn');
+
+    // Estado local de las imágenes
+    let imagesData = [];
+
+    // Eventos Drag & Drop de la zona de carga
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    // Procesar archivos seleccionados
+    function handleFiles(files) {
+      const validFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imgObj = {
+            id: Date.now() + Math.random(),
+            src: e.target.result,
+            rotation: 0,
+            scale: 1
+          };
+          imagesData.push(imgObj);
+          renderGallery();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Renderizar la galería
+    function renderGallery() {
+      gallery.innerHTML = '';
+      
+      imagesData.forEach((img, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = true;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+          <div class="preview-container">
+            <img src="${img.src}" id="img-${img.id}" style="transform: rotate(${img.rotation}deg) scale(${img.scale});">
+          </div>
+          <div class="controls">
+            <div class="scale-control">
+              <label>Escala: <span id="scale-val-${img.id}">${Math.round(img.scale * 100)}%</span></label>
+              <input type="range" min="0.2" max="1.5" step="0.05" value="${img.scale}" oninput="updateScale('${img.id}', this.value)">
+            </div>
+            <div class="btn-group">
+              <button class="btn-action" onclick="rotateImage('${img.id}', -90)">↺ -90°</button>
+              <button class="btn-action" onclick="rotateImage('${img.id}', 90)">↻ +90°</button>
+              <button class="btn-action btn-delete" onclick="deleteImage('${img.id}')">Eliminar</button>
+            </div>
+          </div>
+        `;
+
+        // Eventos para Arrastrar y Reordenar
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragend', handleDragEnd);
+
+        gallery.appendChild(card);
+      });
+
+      generatePdfBtn.disabled = imagesData.length === 0;
+    }
+
+    // Funciones de modificación
+    window.rotateImage = function(id, degrees) {
+      const img = imagesData.find(item => item.id == id);
+      if (img) {
+        img.rotation = (img.rotation + degrees) % 360;
+        renderGallery();
+      }
+    };
+
+    window.updateScale = function(id, value) {
+      const img = imagesData.find(item => item.id == id);
+      if (img) {
+        img.scale = parseFloat(value);
+        const imgElement = document.getElementById(`img-${id}`);
+        const scaleText = document.getElementById(`scale-val-${id}`);
+        if (imgElement) imgElement.style.transform = `rotate(${img.rotation}deg) scale(${img.scale})`;
+        if (scaleText) scaleText.innerText = `${Math.round(img.scale * 100)}%`;
+      }
+    };
+
+    window.deleteImage = function(id) {
+      imagesData = imagesData.filter(item => item.id != id);
+      renderGallery();
+    };
+
+    // Lógica para reordenar (Drag and Drop de tarjetas)
+    let draggedIndex = null;
+
+    function handleDragStart(e) {
+      draggedIndex = +this.dataset.index;
+      this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const targetIndex = +this.dataset.index;
+      if (draggedIndex !== null && draggedIndex !== targetIndex) {
+        const movedItem = imagesData.splice(draggedIndex, 1)[0];
+        imagesData.splice(targetIndex, 0, movedItem);
+        renderGallery();
+      }
+    }
+
+    function handleDragEnd() {
+      this.classList.remove('dragging');
+      draggedIndex = null;
+    }
+
+    // Generación del archivo PDF
+    generatePdfBtn.addEventListener('click', async () => {
+      if (imagesData.length === 0) return;
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      for (let i = 0; i < imagesData.length; i++) {
+        if (i > 0) pdf.addPage();
+
+        const item = imagesData[i];
+        const processedImage = await processImageForPdf(item);
+
+        // Dimensiones base dentro del margen
+        const margin = 15;
+        const maxWidth = pageWidth - (margin * 2);
+        const maxHeight = pageHeight - (margin * 2) - 10; // Espacio para el copyright
+
+        let imgWidth = processedImage.width;
+        let imgHeight = processedImage.height;
+
+        // Ajuste proporcional
+        const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+        imgWidth = imgWidth * ratio * item.scale;
+        imgHeight = imgHeight * ratio * item.scale;
+
+        // Centrado en la página
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight - 10) / 2;
+
+        pdf.addImage(processedImage.dataUrl, 'JPEG', x, y, imgWidth, imgHeight);
+
+        // Pie de página con Copyright
+        pdf.setFontSize(10);
+        pdf.setTextColor(100);
+        pdf.text("© Bladimir Arias", pageWidth / 2, pageHeight - 10, { align: "center" });
+      }
+
+      pdf.save("documento_imagenes_Bladimir_Arias.pdf");
+    });
+
+    // Procesar rotación usando Canvas para asegurar que el PDF conserve la orientación
+    function processImageForPdf(item) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          const radians = (item.rotation * Math.PI) / 180;
+          const isVertical = Math.abs(item.rotation) === 90 || Math.abs(item.rotation) === 270;
+
+          canvas.width = isVertical ? img.height : img.width;
+          canvas.height = isVertical ? img.width : img.height;
+
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(radians);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+          resolve({
+            dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+            width: canvas.width,
+            height: canvas.height
+          });
+        };
+        img.src = item.src;
+      });
+    }
+  </script>
+</body>
+</html>
