@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo de Verbos en Quechua</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --quechua-color: #ef4444; /* Rojo vibrante */
+            --spanish-color: #38bdf8;  /* Celeste / Azul claro */
+            --text-muted: #94a3b8;
+            --suffix-color: #a855f7;  /* Morado para 'rqa' */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #f8fafc;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Contenedor Principal / Tarjeta */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 650px;
+            margin: auto 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 60px 30px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--quechua-color), var(--spanish-color));
+            border-radius: 24px 24px 0 0;
+        }
+
+        /* Área interactiva del verbo Quechua */
+        .quechua-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .quechua-word {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: var(--quechua-color);
+            text-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);
+            margin-bottom: 20px;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1;
+            word-break: break-word;
+            transition: transform 0.2s ease;
+        }
+
+        .quechua-wrapper:hover .quechua-word {
+            transform: scale(1.03);
+        }
+
+        .hover-hint {
+            font-size: 0.85rem;
+            color: var(--spanish-color);
+            margin-top: -15px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        /* Tooltip de Conjugaciones Centrado en Pantalla */
+        .conjugation-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -45%) scale(0.95);
+            width: 90%;
+            max-width: 450px;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85), 0 0 0 100vmax rgba(15, 23, 42, 0.6);
+            z-index: 1000;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .quechua-wrapper:hover .conjugation-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Estructura de la Tabla de Conjugación */
+        .tooltip-header {
+            background-color: #84cc16; /* Verde de la imagen */
+            color: #0f172a;
+            font-weight: 800;
+            text-align: center;
+            padding: 10px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .conj-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+        }
+
+        .conj-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .conj-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .conj-table td {
+            padding: 8px 16px;
+        }
+
+        .conj-q {
+            color: #ffffff;
+            font-weight: 600;
+            width: 55%;
+        }
+
+        .conj-e {
+            color: #ef4444; /* Texto en rojo */
+            font-weight: 700;
+            width: 45%;
+        }
+
+        .rqa {
+            color: var(--suffix-color);
+            font-weight: bold;
+        }
+
+        .term {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        /* Texto en Español */
+        .spanish-word {
+            font-size: 2.1rem;
+            font-weight: 600;
+            color: var(--spanish-color);
+            text-shadow: 0 2px 10px rgba(56, 189, 248, 0.25);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.95;
+            word-break: break-word;
+        }
+
+        /* Animación al sortear */
+        .fade-in {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.85) translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Controles y Botones */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--quechua-color);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px -5px rgba(239, 68, 68, 0.5);
+            background-color: #dc2626;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button.reset-btn {
+            background-color: transparent;
+            border: 2px solid var(--text-muted);
+            color: var(--text-muted);
+            box-shadow: none;
+            padding: 16px 28px;
+        }
+
+        button.reset-btn:hover {
+            border-color: #ffffff;
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+        }
+
+        button:disabled {
+            background-color: #475569;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            background: rgba(15, 23, 42, 0.6);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        footer {
+            margin-top: 30px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        @media (max-width: 500px) {
+            .quechua-word { font-size: 2.6rem; }
+            .spanish-word { font-size: 1.5rem; }
+            .card { padding: 40px 15px; }
+            button { padding: 14px 28px; font-size: 1rem; width: 100%; }
+            .controls { flex-direction: column; width: 100%; }
+            .conj-table { font-size: 0.85rem; }
+            .conj-table td { padding: 6px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Conjugación de Verbos</h1>
+        <p class="subtitle">Sorteador interactivo de verbos en Quechua</p>
+    </header>
+
+    <main>
+        <div class="card">
+            <div class="quechua-wrapper" id="quechua-wrapper">
+                <div id="quechua-container" class="quechua-word">¡Sortea un verbo!</div>
+                <div class="hover-hint" id="hint-text">(Pasa el mouse para ver conjugación)</div>
+                
+                <!-- Cuadro de Conjugación Flotante (Centrado en pantalla) -->
+                <div class="conjugation-tooltip" id="tooltip">
+                    <div class="tooltip-header">PASADO PERFECTO</div>
+                    <table class="conj-table" id="conj-body">
+                        <!-- Generado dinámicamente -->
+                    </table>
+                </div>
+            </div>
+
+            <div id="spanish-container" class="spanish-word">Haz clic en el botón de abajo</div>
+        </div>
+
+        <div class="controls">
+            <button id="draw-btn" onclick="sortearVerbo()">Sortear Verbo</button>
+            <button id="reset-btn" class="reset-btn" onclick="reiniciarSorteo()">Reiniciar Mazo</button>
+        </div>
+
+        <div id="status" class="status-info">
+            Verbos disponibles: <span id="count">0</span>
+        </div>
+    </main>
+
+    <footer>
+        &copy; Bladimir Arias Mejia. Todos los derechos reservados.
+    </footer>
+
+    <script>
+        const verbosOriginales = [
+            { q: "Saqirpay", e: "Abandonar" },
+            { q: "Sat'iy", e: "Abarrotar" },
+            { q: "Llamp'uyachiy", e: "Ablandar" },
+            { q: "Wanuy", e: "Abonar" },
+            { q: "Sulluy", e: "Abortar" },
+            { q: "Uqllay", e: "Abrazar" },
+            { q: "Ukllay", e: "Abrazar / Empollar" },
+            { q: "Ukllanakuy", e: "Abrazarse" },
+            { q: "Kichariy", e: "Abrir" },
+            { q: "Khallay", e: "Abrir brecha" },
+            { q: "Janilay", e: "Abrir la boca" },
+            { q: "Ch'atay", e: "Abrochar" },
+            { q: "Chinkachiy", e: "Abrogar" },
+            { q: "Amiy", e: "Aburrir" },
+            { q: "Tukuy", e: "Acabar" },
+            { q: "Mak'alliy", e: "Acaparar" },
+            { q: "Llankhay", e: "Acariciar" },
+            { q: "Waylluy", e: "Acariciar" },
+            { q: "Astay", e: "Acarrear" },
+            { q: "Chimpay", e: "Acercarse" },
+            { q: "Qayllay", e: "Acercarse" },
+            { q: "K'askay", e: "Acercarse, apegarse" },
+            { q: "Tumpay", e: "Achacar" },
+            { q: "Juch'uychay", e: "Achicar" },
+            { q: "Sut'inchay", e: "Aclarar" },
+            { q: "Manchachiy", e: "Acobardar" },
+            { q: "Puriysiy", e: "Acompañar" },
+            { q: "Yuyaychay", e: "Aconsejar" },
+            { q: "Yachakuy", e: "Acostumbrar" },
+            { q: "K'uchiykachay", e: "Activar" },
+            { q: "Chukuy", e: "Acuclillarse" },
+            { q: "Yanapay", e: "Acudir" },
+            { q: "Piqchay", e: "Acullicar coca" },
+            { q: "Chhukuy", e: "Acunar" },
+            { q: "Tumpay", e: "Acusar" },
+            { q: "Tinkuchiy", e: "Adaptar" },
+            { q: "Nawpay", e: "Adelantar" },
+            { q: "Nañuyay", e: "Adelgazar" },
+            { q: "K'askay", e: "Adherir" },
+            { q: "Mach'ay", e: "Adherir" },
+            { q: "Watuy", e: "Adivinar" },
+            { q: "Wawanchay", e: "Adoptar" },
+            { q: "Sunk'iyay", e: "Adormecer" },
+            { q: "Llunk'uy", e: "Adular" },
+            { q: "Nawch'iy", e: "Afilar" },
+            { q: "Jap'iy", e: "Agarrar, recibir" },
+            { q: "Qaywiy", e: "Agitar un líquido" },
+            { q: "Wañunayay", e: "Agonizar" },
+            { q: "Yupaychay", e: "Agradecer" },
+            { q: "Qutuchay", e: "Agrupar" },
+            { q: "Jusk'uy", e: "Agujerear" },
+            { q: "Jutk'uy", e: "Agujerear" },
+            { q: "Khuruy", e: "Agusanarse" },
+            { q: "Sipiy", e: "Ahorcar" },
+            { q: "Waqaychay", e: "Ahorrar, economizar" },
+            { q: "Q'uchñichiy", e: "Ahumar" },
+            { q: "Ayqichiy", e: "Ahuyentar" },
+            { q: "Sapanchay", e: "Aislar" },
+            { q: "Yupaychay", e: "Alabar" },
+            { q: "Jayway", e: "Alcanzar" },
+            { q: "Tirapay", e: "Alcanzar" },
+            { q: "Kusikuy", e: "Alegrarse" },
+            { q: "Karunchay", e: "Alejar" },
+            { q: "Usqay", e: "Aligerar" },
+            { q: "Qaray", e: "Alimentar" },
+            { q: "Mikhuchiy", e: "Alimentar, dar de comer" },
+            { q: "Chiganchay", e: "Alinear" },
+            { q: "Mit'anay", e: "Alternar" },
+            { q: "K'anchay", e: "Alumbrar" },
+            { q: "Killay", e: "Alumbrar la luna" },
+            { q: "Nuñuchiy", e: "Amamantar" },
+            { q: "Paqariy", e: "Amanecer" },
+            { q: "Sut'iyay", e: "Amanecer" },
+            { q: "Munakuy", e: "Amar" },
+            { q: "Waylluy", e: "Amar, acariciar" },
+            { q: "Watay", e: "Amarrar" },
+            { q: "Munapayay", e: "Ambicionar" },
+            { q: "Pisiyachiy", e: "Aminorar" },
+            { q: "Tawqay", e: "Amontonar" },
+            { q: "Quyuy", e: "Amoratar" },
+            { q: "Kuchuy", e: "Amputar" },
+            { q: "T'ukuriy", e: "Analizar" },
+            { q: "Thatkiy", e: "Andar" },
+            { q: "Sunquchay", e: "Animar" },
+            { q: "Muq'iy", e: "Antojarse" },
+            { q: "Phuyuy", e: "Anublarse" },
+            { q: "Kipuy", e: "Anudar" },
+            { q: "Yapay", e: "Añadir" },
+            { q: "Thasnuy", e: "Apagar" },
+            { q: "Rikhuriy", e: "Aparecer" },
+            { q: "K'askakuy", e: "Apegarse a alguien" },
+            { q: "Qutuy", e: "Apilar, amontonar" },
+            { q: "Nat'uy", e: "Aplastar" },
+            { q: "T'aqllay", e: "Aplaudir" },
+            { q: "Thutay", e: "Apolillarse" },
+            { q: "Chhipiy", e: "Aporcar" },
+            { q: "Jallmay", e: "Aporcar" },
+            { q: "Q'imiy", e: "Apoyar" },
+            { q: "Yachaqay", e: "Aprender" },
+            { q: "Utqhay", e: "Apresurarse" },
+            { q: "Mat'iy", e: "Apretar" },
+            { q: "Nit'iy", e: "Apretar" },
+            { q: "Q'apiy", e: "Apretar con la mano" },
+            { q: "K'ichkiy", e: "Apretujar" },
+            { q: "Qayllay", e: "Aproximar" },
+            { q: "Utqay", e: "Apurar" },
+            { q: "Apurakuy", e: "Apurarse" },
+            { q: "Jaspiy", e: "Arañar" },
+            { q: "Silluy", e: "Arañar" },
+            { q: "Llamk'ay", e: "Arar" },
+            { q: "Lawray", e: "Arder" },
+            { q: "Ruphay", e: "Arder, quemar" },
+            { q: "P'itiy", e: "Arrancar" },
+            { q: "Sik'iy", e: "Arrancar" },
+            { q: "T'ipiy", e: "Arrancar" },
+            { q: "T'iray", e: "Arrancar" },
+            { q: "Llik'iy", e: "Arrancar algo delicado" },
+            { q: "Qhatatay", e: "Arrastrar" },
+            { q: "Qatiy", e: "Arrear" },
+            { q: "Allinchay", e: "Arreglar/Corregir" },
+            { q: "Qhimiy", e: "Arrimar" },
+            { q: "Qunquriy", e: "Arrodillar" },
+            { q: "Ch'anqay", e: "Arrojar" },
+            { q: "Aqtuy", e: "Arrojar de la boca" },
+            { q: "Chuqay", e: "Arrojar piedras" },
+            { q: "Sip'uy", e: "Arrugar" },
+            { q: "Suway", e: "Asaltar" },
+            { q: "Kankay", e: "Asar" },
+            { q: "Wichariy", e: "Ascender, subir" },
+            { q: "Sipiy", e: "Asfixiar" },
+            { q: "Qawiy", e: "Asolear la oca" },
+            { q: "Mancharikuy", e: "Asustarse" },
+            { q: "Jark'ay", e: "Atajar" },
+            { q: "Jap'iqay", e: "Atender" },
+            { q: "Inqhay", e: "Atizar" },
+            { q: "Chakachiy", e: "Atorar" },
+            { q: "Yapay", e: "Aumentar" },
+            { q: "Miray", e: "Aumentar, multiplicar" },
+            { q: "Yalliy", e: "Aventajar" },
+            { q: "P'inqakuy", e: "Avergonzarse" },
+            { q: "Tapukipay", e: "Averiguar" },
+            { q: "Mask'ay", e: "Averiguar, indagar" },
+            { q: "K'arkuy", e: "Avinagrarse" },
+            { q: "Willay", e: "Avisar" },
+            { q: "Yanapay", e: "Ayudar" },
+            { q: "Yanapakuy", e: "Ayudarse" },
+            { q: "Sasiy", e: "Ayunar" },
+            { q: "Llawsay", e: "Babear" },
+            { q: "Tusuy", e: "Bailar" },
+            { q: "Uraykuy", e: "Bajar" },
+            { q: "Armay", e: "Bañar" },
+            { q: "Pichay", e: "Barrer" },
+            { q: "Pharpay", e: "Batir las alas" },
+            { q: "Upyay", e: "Beber" },
+            { q: "Upiy", e: "Beber a sorbos" },
+            { q: "Thatay", e: "Beber mucho" },
+            { q: "Much'ay", e: "Besar" },
+            { q: "P'achaqillqay", e: "Bordar" },
+            { q: "Wikch'uy", e: "Botar" },
+            { q: "Qarquy", e: "Expulsar" },
+            { q: "Illay", e: "Brillar" },
+            { q: "Ch'allay", e: "Brindar" },
+            { q: "P'utuy", e: "Brotar" },
+            { q: "Mask'ay", e: "Buscar" },
+            { q: "Urmay", e: "Caer" },
+            { q: "Phaqchay", e: "Caer agua en cascada" },
+            { q: "Urmakuy", e: "Caerse" },
+            { q: "Q'uñichiy", e: "Calentar" },
+            { q: "Q'uñikuy", e: "Calentarse" },
+            { q: "Ch'inñay", e: "Callar" },
+            { q: "Puriy", e: "Caminar" },
+            { q: "Lat'ay", e: "Caminar de 4 pies" },
+            { q: "Thaskiy", e: "Caminar rápido" },
+            { q: "Thamay", e: "Caminar sin rumbo" },
+            { q: "Sayk'ukuy", e: "Cansarse" },
+            { q: "Takiy", e: "Cantar" },
+            { q: "Chaqnay", e: "Cargar" },
+            { q: "Q'ipiy", e: "Cargar" },
+            { q: "Wantuy", e: "Cargar en hombro" },
+            { q: "Marq'ay", e: "Cargar en los brazos" },
+            { q: "Kasaray", e: "Casarse" },
+            { q: "Allay", e: "Cavar/escavar" },
+            { q: "Suysuy", e: "Cernir" },
+            { q: "Wichq'ay", e: "Cerrar" },
+            { q: "Wisq'ay", e: "Cerrar" },
+            { q: "Thaniy", e: "Cesar, amainar" },
+            { q: "Suruy", e: "Chorrear" },
+            { q: "Ch'unqay", e: "Chupar" },
+            { q: "Tuqtuy", e: "Cloquear" },
+            { q: "Chayay", e: "Cocer algún alimento" },
+            { q: "Wayk'uy", e: "Cocinar" },
+            { q: "Warkhuy", e: "Colgar" },
+            { q: "Tikray", e: "Colocar al revés" },
+            { q: "Qallariy", e: "Comenzar, empezar" },
+            { q: "Mikhuy", e: "Comer" },
+            { q: "Pituy", e: "Comer machka" },
+            { q: "Khuyay", e: "Compadecer" },
+            { q: "Tinkuchiy", e: "Comparar" },
+            { q: "Llallinakuy", e: "Competir" },
+            { q: "Junt'achiy", e: "Complementar" },
+            { q: "Arawiy", e: "Componer versos" },
+            { q: "Rantiy", e: "Comprar" },
+            { q: "Pusay", e: "Conducir" },
+            { q: "Riqsiy", e: "Conocer" },
+            { q: "Pirway", e: "Construir depósitos" },
+            { q: "Pirqay", e: "Construir paredes" },
+            { q: "Yupay", e: "Contar" },
+            { q: "Rimanakuy", e: "Conversar" },
+            { q: "Kikinchay", e: "Copiar" },
+            { q: "Waqray", e: "Cornear" },
+            { q: "Rumpiy", e: "Correr" },
+            { q: "Khuchuy", e: "Cortar" },
+            { q: "K'utuy", e: "Cortar" },
+            { q: "Ruthuy", e: "Cortar cabello/hierba" },
+            { q: "Aymuray", e: "Cosechar" },
+            { q: "Tipiy", e: "Cosechar maíz" },
+            { q: "Siray", e: "Coser" },
+            { q: "Iniy", e: "Crecer, tener fé" },
+            { q: "Wiñay", e: "Crecer" },
+            { q: "Uyway", e: "Criar" },
+            { q: "Chakay", e: "Cruzar" },
+            { q: "Qhatay", e: "Cubrir" },
+            { q: "Chakrayapuy", e: "Cultivar" },
+            { q: "Jampiy", e: "Curar" },
+            { q: "Quy", e: "Dar" },
+            { q: "Chuchuchiy", e: "Dar de lactar" },
+            { q: "Q'aqchay", e: "Dar de latigazos" },
+            { q: "Ruriy", e: "Dar fruto" },
+            { q: "T'inkay", e: "Dar papirotes" },
+            { q: "Saqmay", e: "Dar puñetes" },
+            { q: "Llanthuchay", e: "Dar sombra" },
+            { q: "Muyuy", e: "Dar vuelta" },
+            { q: "Niy", e: "Decir" },
+            { q: "Akay", e: "Defecar" },
+            { q: "Jamach'ay", e: "Defender" },
+            { q: "Sut'inchay", e: "Definir" },
+            { q: "Nak'ay", e: "Degollar" },
+            { q: "Saqiy", e: "Dejar" },
+            { q: "Nuspay", e: "Delirar" },
+            { q: "Qhawachiy", e: "Demostrar" },
+            { q: "T'akay", e: "Derramar" },
+            { q: "Jich'ay", e: "Derramar, verter" },
+            { q: "Unuyay", e: "Derretir" },
+            { q: "Thuñiy", e: "Derribar" },
+            { q: "Phaskay", e: "Desatar" },
+            { q: "Samariy", e: "Descansar" },
+            { q: "T'iqway", e: "Descascarar" },
+            { q: "Munay", e: "Desear" },
+            { q: "Pisipay", e: "Desfallecer" },
+            { q: "Muchhay", e: "Desgranar" },
+            { q: "Qhuray", e: "Desherbar" },
+            { q: "Llaqhiy", e: "Deshojar" },
+            { q: "Chhusuy", e: "Desinflarse" },
+            { q: "Llusk'ay", e: "Deslizar" },
+            { q: "T'isay", e: "Desmenuzar" },
+            { q: "Urmaykuy", e: "Desmoronar" },
+            { q: "Ch'utiy", e: "Desollar" },
+            { q: "Lluch'uy", e: "Despellejar" },
+            { q: "Usuy", e: "Desperdiciarse" },
+            { q: "Rikch'ariy", e: "Despertar" },
+            { q: "Qhichuy", e: "Despojar" },
+            { q: "Q'asay", e: "Desportillar" },
+            { q: "Qharquy", e: "Desterrar" },
+            { q: "Januk'ay", e: "Destetar" },
+            { q: "Sut'uchiy", e: "Destilar" },
+            { q: "Sayachiy", e: "Detener" },
+            { q: "Kutichipuy", e: "Devolver" },
+            { q: "Siq'iy", e: "Dibujar" },
+            { q: "T'aqay", e: "Discriminar" },
+            { q: "Siminakuy", e: "Discutir" },
+            { q: "Siq'ichay", e: "Diseñar" },
+            { q: "Pisiyay", e: "Disminuir" },
+            { q: "Thawtiy", e: "Disparatar" },
+            { q: "Musphaykachay", e: "Divagar" },
+            { q: "Rak'iy", e: "Dividir" },
+            { q: "Pataray", e: "Doblar" },
+            { q: "Nanay", e: "Doler" },
+            { q: "K'aray", e: "Doler fuerte" },
+            { q: "Puñuy", e: "Dormir" },
+            { q: "Tunkiy", e: "Dudar" },
+            { q: "Phanchiy", e: "Echar brotes" },
+            { q: "Qhalliy", e: "Echar un liquido" },
+            { q: "Aqhay", e: "Elaborar chicha" },
+            { q: "Llut'ay", e: "Embadurnar" },
+            { q: "Ch'ipay", e: "Embalar" },
+            { q: "Machay", e: "Emborracharse" },
+            { q: "T'iqiy", e: "Embutir" },
+            { q: "Uqilay", e: "Empollar" },
+            { q: "Tanqay", e: "Empujar" },
+            { q: "Khakay", e: "Encajar" },
+            { q: "Chiqanchay", e: "Encaminar" },
+            { q: "Jap'ichiy", e: "Encender" },
+            { q: "Tariy", e: "Encontrar" },
+            { q: "Tinkuy", e: "Encontrarse" },
+            { q: "Misk'ichay", e: "Endulzar" },
+            { q: "Rumiyay", e: "Endurecer" },
+            { q: "Unquy", e: "Enfermar" },
+            { q: "Sinruy", e: "Enfilar" },
+            { q: "Tulluyay", e: "Enflaquecer" },
+            { q: "Chiriyachiy", e: "Enfriar" },
+            { q: "Nukñay", e: "Engañar" },
+            { q: "Yumay", e: "Engendrar" },
+            { q: "Wirayay", e: "Engordar" },
+            { q: "Wirachay", e: "Engrasar" },
+            { q: "Aytiy", e: "Enjuagar" },
+            { q: "Maqch'iy", e: "Enjuagar" },
+            { q: "Saway", e: "Enlazar, casar" },
+            { q: "Q'impiy", e: "Enrollar" },
+            { q: "Arwikuy", e: "Enroscarse" },
+            { q: "Yawarchay", e: "Ensangrentar" },
+            { q: "Yachachiy", e: "Enseñar" },
+            { q: "P'ampay", e: "Enterrar" },
+            { q: "Yaykuy", e: "Entrar" },
+            { q: "Llakiy", e: "Entristecerse" },
+            { q: "Thantay", e: "Envejecer" },
+            { q: "Kachay", e: "Enviar" },
+            { q: "Mayt'uy", e: "Envolver" },
+            { q: "Pantay", e: "Equivocarse" },
+            { q: "Jap'ay", e: "Eructar" },
+            { q: "Ayqey", e: "Escapar" },
+            { q: "Wanay", e: "Escarmentar" },
+            { q: "Siqsiy", e: "Escocer" },
+            { q: "Akllay", e: "Escoger" },
+            { q: "Pakay", e: "Esconder" },
+            { q: "Qillqay", e: "Escribir" },
+            { q: "Uyariy", e: "Escuchar" },
+            { q: "Thuqay", e: "Escupir" },
+            { q: "Ch'irway", e: "Escurrir ropa" },
+            { q: "Kallpanchay", e: "Esforzar" },
+            { q: "Suyay", e: "Esperar" },
+            { q: "Musphay", e: "Estar en error" },
+            { q: "Phutiy", e: "Estar triste" },
+            { q: "Achhiy", e: "Estornudar" },
+            { q: "Q'ichay", e: "Evacuar diarrea" },
+            { q: "Chaninchay", e: "Evaluar" },
+            { q: "Khuskiy", e: "Examinar" },
+            { q: "Aya jurqhuy", e: "Exhumar" },
+            { q: "Riqsichiy", e: "Explicar" },
+            { q: "Ch'umay", e: "Exprimir" },
+            { q: "Mast'ay", e: "Extender" },
+            { q: "K'iruy", e: "Fajar" },
+            { q: "Chumpikuy", e: "Fajarse" },
+            { q: "Pisipay", e: "Faltar" },
+            { q: "Mismiy", e: "Filtrar" },
+            { q: "T'ikay", e: "Florecer" },
+            { q: "Tuytuy", e: "Flotar" },
+            { q: "Sinruy", e: "Formar" },
+            { q: "Q'asparay", e: "Freír" },
+            { q: "Khituy", e: "Frotar" },
+            { q: "Qhaquy", e: "Frotar" },
+            { q: "Pitay", e: "Fumar" },
+            { q: "Atipay", e: "Ganar, vencer" },
+            { q: "Lat'ay", e: "Gatear" },
+            { q: "Takay", e: "Golpear" },
+            { q: "Sut'uy", e: "Gotear" },
+            { q: "Qhapariy", e: "Gritar" },
+            { q: "Awqay", e: "Guerrear" },
+            { q: "Malliy", e: "Gustar, catar" },
+            { q: "Tiyay", e: "Haber, sentarse" },
+            { q: "Parlay", e: "Hablar" },
+            { q: "Rimay", e: "Hablar" },
+            { q: "Ruway", e: "Hacer" },
+            { q: "Tikay", e: "Hacer adobes" },
+            { q: "Ch'aqway", e: "Hacer bulla" },
+            { q: "K'ajay", e: "Hacer calor" },
+            { q: "Kanay", e: "Hacer fogata" },
+            { q: "Chiriy", e: "Hacer frío" },
+            { q: "Ch'arkiy", e: "Hacer tasajo" },
+            { q: "Wayray", e: "Hacer viento" },
+            { q: "Saqsay", e: "Hartarse" },
+            { q: "Asnay", e: "Heder" },
+            { q: "Qasay", e: "Helar" },
+            { q: "K'iriy", e: "Herir" },
+            { q: "Phullpuy", e: "Hervir" },
+            { q: "T'impuy", e: "Hervir" },
+            { q: "Phuchkay", e: "Hilar" },
+            { q: "Qunquriy", e: "Hincar" },
+            { q: "Punkiy", e: "Hinchar" },
+            { q: "Ayqiy", e: "Huir" },
+            { q: "Q'usñiy", e: "Humear" },
+            { q: "Challpuy", e: "Humedecer" },
+            { q: "T'uqpiy", e: "Hurgar" },
+            { q: "Yachapayay", e: "Imitar" },
+            { q: "Jark'ay", e: "Impedir" },
+            { q: "Mañarikuy", e: "Implorar" },
+            { q: "Juchachay", e: "Imputar" },
+            { q: "Ruphachiy", e: "Incendiar" },
+            { q: "Jatarichiy", e: "Incitar" },
+            { q: "Tapupayay", e: "Interrogar" },
+            { q: "Manchachiy", e: "Intimidar" },
+            { q: "Tikray", e: "Invertir" },
+            { q: "Riy", e: "Ir" },
+            { q: "Ripuy", e: "Irse" },
+            { q: "Aysay", e: "Jalar" },
+            { q: "Pukllay", e: "Jugar" },
+            { q: "Llaqllay", e: "Labrar madera" },
+            { q: "Chuchuy", e: "Lactar" },
+            { q: "Nuñuy", e: "Lactar" },
+            { q: "Ayñay", e: "Ladrar" },
+            { q: "Llaqway", e: "Lamer" },
+            { q: "Mayllay", e: "Lavar" },
+            { q: "T'aqsay", e: "Lavar ropa" },
+            { q: "Nawiriy", e: "Leer" },
+            { q: "Juqhariy", e: "Levantar" },
+            { q: "Jatariy", e: "Levantarse" },
+            { q: "Sayariy", e: "Levantarse" },
+            { q: "Waqyay", e: "Llamar" },
+            { q: "Chayay", e: "Llegar" },
+            { q: "Winay", e: "Llenar" },
+            { q: "Apay", e: "Llevar" },
+            { q: "Waqay", e: "Llorar" },
+            { q: "Paray", e: "Llover" },
+            { q: "Nut'uy", e: "Machacar" },
+            { q: "Puquy", e: "Madurar" },
+            { q: "Kachay", e: "Mandar" },
+            { q: "Chimpuy", e: "Marcar" },
+            { q: "Khamuy", e: "Masticar" },
+            { q: "Pikchuy", e: "Masticar coca" },
+            { q: "Wañuchiy", e: "Matar" },
+            { q: "Tupuy", e: "Medir, pesar" },
+            { q: "Llullakuy", e: "Mentir" },
+            { q: "Chaqruy", e: "Mezclar" },
+            { q: "Piqtuy", e: "Mezclar" },
+            { q: "Qhaway", e: "Mirar" },
+            { q: "Kutay", e: "Moler" },
+            { q: "Lluq'ay", e: "Montar" },
+            { q: "Khaniy", e: "Morder" },
+            { q: "P'atay", e: "Morder" },
+            { q: "Wañuy", e: "Morir" },
+            { q: "Kuyuy", e: "Moverse" },
+            { q: "Muruy", e: "Mutilar" },
+            { q: "Paqariy", e: "Nacer" },
+            { q: "Wayt'ay", e: "Nadar" },
+            { q: "Rit'iy", e: "Nevar" },
+            { q: "Sutichay", e: "Nombrar" },
+            { q: "Kasuy", e: "Obedecer" },
+            { q: "Chiqniy", e: "Odiar" },
+            { q: "Uyariy", e: "Oir" },
+            { q: "Muskhiy", e: "Oler" },
+            { q: "Qunqay", e: "Olvidar" },
+            { q: "Mañakuy", e: "Orar/pedir" },
+            { q: "Ch'away", e: "Ordeñar" },
+            { q: "Jisp'ay", e: "Orinar" },
+            { q: "Tutayay", e: "Oscurecer" },
+            { q: "Muchuy", e: "Padecer, sufrir" },
+            { q: "Qupuy", e: "Pagar" },
+            { q: "Lampay", e: "Palear" },
+            { q: "Llamkhay", e: "Palpar" },
+            { q: "Sayay", e: "Pararse" },
+            { q: "Wachay", e: "Parir" },
+            { q: "Michiy", e: "Pastar" },
+            { q: "Jaytay", e: "Patear" },
+            { q: "Mañakuy", e: "Pedir" },
+            { q: "Supiy", e: "Peer" },
+            { q: "Maqay", e: "Pegar (golpe)" },
+            { q: "Waykay", e: "Pegar entre varios" },
+            { q: "Naqch'ay", e: "Peinar" },
+            { q: "Maqanakuy", e: "Pelear" },
+            { q: "K'ichiy", e: "Pellizcar" },
+            { q: "T'ukuy", e: "Pensar" },
+            { q: "Yuyay", e: "Pensar, recordar" },
+            { q: "Chinkachiy", e: "Perder" },
+            { q: "Wach'iy", e: "Picar los insectos" },
+            { q: "Chhuruy", e: "Picotear" },
+            { q: "Tuqsiy", e: "Pinchar" },
+            { q: "Llimp'iy", e: "Pintar" },
+            { q: "Saruy", e: "Pisar" },
+            { q: "Mallkiy", e: "Plantar" },
+            { q: "Atiy", e: "Poder" },
+            { q: "Ismuy", e: "Podrir" },
+            { q: "Churay", e: "Poner" },
+            { q: "Tapuy", e: "Preguntar" },
+            { q: "T'ipay", e: "Prender en pecho" },
+            { q: "Wakichiy", e: "Preparar" },
+            { q: "Mañay", e: "Prestar" },
+            { q: "Manuy", e: "Prestar dinero" },
+            { q: "Llamiy", e: "Probar" },
+            { q: "Puquchiy", e: "Producir" },
+            { q: "Llunk'iy", e: "Pulir, lustrar" },
+            { q: "P'akiy", e: "Quebrar" },
+            { q: "Qhipakuy", e: "Quedarse" },
+            { q: "Ruphay", e: "Quemar" },
+            { q: "Munay", e: "Querer" },
+            { q: "Qhichuy", e: "Quitar" },
+            { q: "Ch'iqtay", e: "Rajar" },
+            { q: "Raskhay", e: "Rascar" },
+            { q: "Jap'iqay", e: "Recibir" },
+            { q: "Pallay", e: "Recoger" },
+            { q: "Yuyariy", e: "Recordar" },
+            { q: "Siriy", e: "Recostarse" },
+            { q: "Qarpay", e: "Regar" },
+            { q: "Kutimuy", e: "Regresar" },
+            { q: "Asiy", e: "Reír" },
+            { q: "Samay", e: "Respirar" },
+            { q: "Tantay", e: "Reunir" },
+            { q: "Phatay", e: "Reventar" },
+            { q: "Suway", e: "Robar" },
+            { q: "Ch'aqchuy", e: "Rociar" },
+            { q: "Qurmay", e: "Rodar" },
+            { q: "Yachay", e: "Saber" },
+            { q: "Urqhuy", e: "Sacar" },
+            { q: "Thalay", e: "Sacudir" },
+            { q: "Lluqsiy", e: "Salir" },
+            { q: "Napay", e: "Saludar" },
+            { q: "Ch'akichiy", e: "Secar" },
+            { q: "Tarpuy", e: "Sembrar" },
+            { q: "Tiyay", e: "Sentarse" },
+            { q: "Musyay", e: "Sentir" },
+            { q: "Rak'iy", e: "Separar" },
+            { q: "Kay", e: "Ser estar" },
+            { q: "Khuyuy", e: "Silbar" },
+            { q: "Qhaquy", e: "Sobar" },
+            { q: "Kachariy", e: "Soltar" },
+            { q: "Musquy", e: "Soñar" },
+            { q: "Phukuy", e: "Soplar" },
+            { q: "Wichariy", e: "Subir" },
+            { q: "Jump'iy", e: "Sudar" },
+            { q: "Kirpay", e: "Tapar" },
+            { q: "Away", e: "Tejer" },
+            { q: "P'itay", e: "Tejer" },
+            { q: "Khatatiy", e: "Temblar" },
+            { q: "Kapuy", e: "Tener algo" },
+            { q: "Tullpuy", e: "Teñir" },
+            { q: "Tukuy", e: "Terminar" },
+            { q: "Q'iwiy", e: "Torcer" },
+            { q: "Ujuy", e: "Toser" },
+            { q: "Jank'ay", e: "Tostar" },
+            { q: "Llamk'ay", e: "Trabajar" },
+            { q: "Apamuy", e: "Traer" },
+            { q: "Millpuy", e: "Tragar" },
+            { q: "Simp'ay", e: "Trenzar" },
+            { q: "Misk'ay", e: "Tropezar" },
+            { q: "Yupaychakuy", e: "Vanagloriarse" },
+            { q: "Qhatuy", e: "Vender" },
+            { q: "Jamuy", e: "Venir" },
+            { q: "Rikuy", e: "Ver" },
+            { q: "Ch'usay", e: "Viajar" },
+            { q: "Kawsay", e: "Vivir" },
+            { q: "Phaway", e: "Volar" },
+            { q: "Kutiy", e: "Volver" },
+            { q: "Lansay", e: "Vomitar" },
+            { q: "Taqtiyay", e: "Zapatear" }
+        ];
+
+        let verbosDisponibles = [];
+
+        const quechuaEl = document.getElementById("quechua-container");
+        const spanishEl = document.getElementById("spanish-container");
+        const countEl = document.getElementById("count");
+        const drawBtn = document.getElementById("draw-btn");
+        const conjBodyEl = document.getElementById("conj-body");
+        const hintTextEl = document.getElementById("hint-text");
+
+        function inicializar() {
+            verbosDisponibles = [...verbosOriginales];
+            actualizarContador();
+        }
+
+        function actualizarContador() {
+            countEl.textContent = `${verbosDisponibles.length} de ${verbosOriginales.length}`;
+        }
+
+        function obtenerRaiz(verboQuechua) {
+            let limpia = verboQuechua.split(',')[0].trim();
+            if (limpia.toLowerCase().endsWith('y')) {
+                return limpia.slice(0, -1);
+            }
+            return limpia;
+        }
+
+        function obtenerVerboEspañolSimple(espanol) {
+            return espanol.split('/')[0].split(',')[0].trim().toLowerCase();
+        }
+
+        function conjugarEspanolPasado(verboEspañol) {
+            let v = verboEspañol.trim().toLowerCase();
+            
+            if (v === "comer") return ["comí", "comiste", "comió", "comimos", "comimos", "comieron", "comieron"];
+            if (v === "moler") return ["molí", "moliste", "molió", "molimos", "molimos", "molieron", "molieron"];
+            if (v === "hablar") return ["hablé", "hablaste", "habló", "hablamos", "hablamos", "hablaron", "hablaron"];
+            if (v === "trabajar") return ["trabajé", "trabajaste", "trabajó", "trabajamos", "trabajamos", "trabajaron", "trabajaron"];
+            if (v === "ir") return ["fui", "fuiste", "fue", "fuimos", "fuimos", "fueron", "fueron"];
+            if (v === "hacer") return ["hice", "hiciste", "hizo", "hicimos", "hicimos", "hicieron", "hicieron"];
+            if (v === "ver") return ["vi", "viste", "vio", "vimos", "vimos", "vieron", "vieron"];
+
+            if (v.endsWith("ar")) {
+                let raiz = v.slice(0, -2);
+                return [raiz + "é", raiz + "aste", raiz + "ó", raiz + "amos", raiz + "amos", raiz + "aron", raiz + "aron"];
+            } else if (v.endsWith("er") || v.endsWith("ir")) {
+                let raiz = v.slice(0, -2);
+                return [raiz + "í", raiz + "iste", raiz + "ió", raiz + "imos", raiz + "imos", raiz + "ieron", raiz + "ieron"];
+            } else if (v.endsWith("se")) {
+                let raizBase = v.slice(0, -2);
+                let conj = conjugarEspanolPasado(raizBase);
+                return conj.map((c, idx) => {
+                    let pronombre = ["me", "te", "se", "nos", "nos", "se", "se"][idx];
+                    return `${pronombre} ${c}`;
+                });
+            }
+
+            return ["acción pasada", "acción pasada", "acción pasada", "acción pasada", "acción pasada", "acción pasada", "acción pasada"];
+        }
+
+        function generarTablaConjugacion(verboQ, verboE) {
+            const raiz = obtenerRaiz(verboQ);
+            const vEspañol = obtenerVerboEspañolSimple(verboE);
+            const conjEsp = conjugarEspanolPasado(vEspañol);
+
+            const pronombres = [
+                { pQ: "Ñuqa", suf: "ni", pE: "Yo", cE: conjEsp[0] },
+                { pQ: "Qam", suf: "nki", pE: "Tú", cE: conjEsp[1] },
+                { pQ: "Pay", suf: "", pE: "Él/Ella", cE: conjEsp[2] },
+                { pQ: "Ñuqanchik", suf: "nchik", pE: "Nosotros (incl)", cE: conjEsp[3] },
+                { pQ: "Ñuqayku", suf: "yku", pE: "Nosotros (excl)", cE: conjEsp[4] },
+                { pQ: "Qamkuna", suf: "nkichik", pE: "Ustedes", cE: conjEsp[5] },
+                { pQ: "Paykuna", suf: "nku", pE: "Ellos/Ellas", cE: conjEsp[6] }
+            ];
+
+            let html = "";
+            pronombres.forEach(item => {
+                html += `
+                    <tr>
+                        <td class="conj-q">
+                            ${item.pQ} ${raiz}<span class="rqa">rqa</span><span class="term">${item.suf}</span>
+                        </td>
+                        <td class="conj-e">
+                            ${item.pE} ${item.cE}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            conjBodyEl.innerHTML = html;
+        }
+
+        function sortearVerbo() {
+            if (verbosDisponibles.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * verbosDisponibles.length);
+            const verboSorteado = verbosDisponibles.splice(randomIndex, 1)[0];
+
+            quechuaEl.classList.remove("fade-in");
+            spanishEl.classList.remove("fade-in");
+            void quechuaEl.offsetWidth; 
+
+            quechuaEl.textContent = verboSorteado.q;
+            spanishEl.textContent = verboSorteado.e;
+
+            generarTablaConjugacion(verboSorteado.q, verboSorteado.e);
+            hintTextEl.style.display = "block";
+
+            quechuaEl.classList.add("fade-in");
+            spanishEl.classList.add("fade-in");
+
+            actualizarContador();
+
+            if (verbosDisponibles.length === 0) {
+                drawBtn.disabled = true;
+                drawBtn.textContent = "¡Mazo Completado!";
+            }
+        }
+
+        function reiniciarSorteo() {
+            verbosDisponibles = [...verbosOriginales];
+            actualizarContador();
+            
+            quechuaEl.textContent = "¡Mazo Reiniciado!";
+            spanishEl.textContent = "Presiona 'Sortear Verbo' para empezar";
+            hintTextEl.style.display = "none";
+            conjBodyEl.innerHTML = "";
+            
+            drawBtn.disabled = false;
+            drawBtn.textContent = "Sortear Verbo";
+        }
+
+        window.onload = () => {
+            inicializar();
+            hintTextEl.style.display = "none";
+        };
+    </script>
+</body>
+</html>
