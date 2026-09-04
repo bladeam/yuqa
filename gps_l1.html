@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Receptor Geodésico L1 - GPS Topográfico</title>
+  <style>
+    :root {
+      --bg-color: #0b0f12;
+      --panel-bg: #141a1f;
+      --accent-color: #00e676;
+      --warning-color: #ffd600;
+      --danger-color: #ff1744;
+      --text-color: #e0e6ed;
+      --border-color: #263238;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-mono);
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    header {
+      width: 100%;
+      text-align: center;
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      color: var(--accent-color);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Estado de Fijación GNSS */
+    #fixStatus {
+      width: 100%;
+      padding: 6px;
+      font-size: 0.75rem;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background-color: #1c252b;
+      border: 1px solid var(--border-color);
+      color: var(--warning-color);
+    }
+
+    /* Monitor Principal de Coordenadas */
+    .coords-display {
+      width: 100%;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .coord-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .coord-row:last-child { margin-bottom: 0; }
+
+    .coord-label {
+      font-size: 0.7rem;
+      color: #90a4ae;
+      text-transform: uppercase;
+    }
+
+    .coord-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .utm-box {
+      background-color: #0b0f12;
+      border-left: 3px solid var(--accent-color);
+      padding: 6px;
+      border-radius: 3px;
+      margin-top: 6px;
+    }
+
+    /* Rejilla de Métricas GNSS */
+    .metrics-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .metric-box {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.6rem;
+      color: #90a4ae;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    /* Controles y Botones */
+    .btn-group {
+      width: 100%;
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .btn {
+      flex: 1;
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .btn-sec {
+      background: #263238;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn:active { opacity: 0.8; }
+
+    /* Tabla de Registro Geodésico */
+    .log-container {
+      width: 100%;
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .log-header {
+      font-size: 0.7rem;
+      color: var(--accent-color);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.62rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 4px 3px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th { color: #90a4ae; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>GNSS Geodésico L1</h1>
+  </header>
+
+  <div id="fixStatus">Buscando Constelación GNSS L1...</div>
+
+  <!-- Panel de Coordenadas Geodésicas -->
+  <div class="coords-display">
+    <div class="coord-row">
+      <span class="coord-label">Latitud (WGS84)</span>
+      <span id="latVal" class="coord-value">0.00000000°</span>
+    </div>
+    <div class="coord-row">
+      <span class="coord-label">Longitud (WGS84)</span>
+      <span id="lonVal" class="coord-value">0.00000000°</span>
+    </div>
+    <div class="coord-row">
+      <span class="coord-label">Alt. Elipsoidal (h)</span>
+      <span id="altVal" class="coord-value">0.00 m</span>
+    </div>
+
+    <!-- Conversión Automática a UTM -->
+    <div class="utm-box">
+      <div class="coord-row">
+        <span class="coord-label">Proyección UTM:</span>
+        <span id="utmZone" style="font-size: 0.75rem; color: var(--accent-color);">Zona --</span>
+      </div>
+      <div class="coord-row">
+        <span class="coord-label">Este (E) / Norte (N)</span>
+        <span id="utmVal" class="coord-value" style="font-size: 0.95rem;">0.000 m, 0.000 m</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas de Calidad Topográfica -->
+  <div class="metrics-grid">
+    <div class="metric-box">
+      <div class="metric-label">Precisión H. (HDOP Est.)</div>
+      <div id="accVal" class="metric-value" style="color: var(--warning-color);">±0.00 m</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-label">Velocidad / Rumbo</div>
+      <div id="speedVal" class="metric-value">0.0 km/h | 0°</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-label">Época / Muestras</div>
+      <div id="epochVal" class="metric-value">#0</div>
+    </div>
+
+    <div class="metric-box">
+      <div class="metric-label">Modo Posicionamiento</div>
+      <div id="modeVal" class="metric-value" style="color: #40c4ff;">L1 Standalone</div>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="btn-group">
+    <button id="startBtn" class="btn">Iniciar Rastreo L1</button>
+    <button id="recordBtn" class="btn btn-sec">Grabar Vértice</button>
+  </div>
+
+  <div class="btn-group">
+    <button id="exportCsvBtn" class="btn btn-sec">Exportar CSV</button>
+    <button id="exportKmlBtn" class="btn btn-sec">Exportar KML</button>
+    <button id="exportGeoJsonBtn" class="btn btn-sec">GeoJSON</button>
+  </div>
+
+  <!-- Registro de Vértices de Campo -->
+  <div class="log-container">
+    <div class="log-header">
+      <span>Libreta de Campo Geodésica</span>
+      <span>Vértices: <b id="pointCount">0</b></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>UTM E (m)</th>
+          <th>UTM N (m)</th>
+          <th>h (m)</th>
+          <th>Prec.</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let watchId = null;
+    let epochCount = 0;
+    let currentData = null;
+    let recordedPoints = [];
+
+    const latVal = document.getElementById('latVal');
+    const lonVal = document.getElementById('lonVal');
+    const altVal = document.getElementById('altVal');
+    const utmZone = document.getElementById('utmZone');
+    const utmVal = document.getElementById('utmVal');
+    const accVal = document.getElementById('accVal');
+    const speedVal = document.getElementById('speedVal');
+    const epochVal = document.getElementById('epochVal');
+    const fixStatus = document.getElementById('fixStatus');
+    const startBtn = document.getElementById('startBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const logTableBody = document.getElementById('logTableBody');
+    const pointCount = document.getElementById('pointCount');
+
+    // Algoritmo de Conversión Cilíndrica Conforme Transversa Mercator (WGS84 a UTM)
+    function wgs84ToUTM(lat, lon) {
+      const a = 6378137.0; // Semieje mayor WGS84
+      const f = 1 / 298.257223563; // Aplanamiento
+      const b = a * (1 - f);
+      const e2 = (a**2 - b**2) / a**2;
+      const e2prime = (a**2 - b**2) / b**2;
+
+      const zone = Math.floor((lon + 180) / 6) + 1;
+      const lambda0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+
+      const phi = lat * Math.PI / 180;
+      const lambda = lon * Math.PI / 180;
+
+      const N = a / Math.sqrt(1 - e2 * Math.sin(phi)**2);
+      const T = Math.tan(phi)**2;
+      const C = e2prime * Math.cos(phi)**2;
+      const A = (lambda - lambda0) * Math.cos(phi);
+
+      const M = a * ((1 - e2/4 - 3*e2**2/64 - 5*e2**3/256) * phi
+        - (3*e2/8 + 3*e2**2/32 + 45*e2**3/1024) * Math.sin(2*phi)
+        + (15*e2**2/256 + 45*e2**3/1024) * Math.sin(4*phi)
+        - (35*e2**3/3072) * Math.sin(6*phi));
+
+      const k0 = 0.9996;
+
+      let easting = k0 * N * (A + (1-T+C)*A**3/6 + (5-18*T+T**2+72*C-58*e2prime)*A**5/120) + 500000.0;
+      let northing = k0 * (M + N * Math.tan(phi) * (A**2/2 + (5-T+9*C+4*C**2)*A**4/24 + (61-58*T+T**2+600*C-330*e2prime)*A**6/720));
+
+      if (lat < 0) northing += 10000000.0; // Hemisferio Sur
+
+      const hemisphere = lat >= 0 ? 'N' : 'S';
+      return {
+        zone: `${zone}${hemisphere}`,
+        easting: easting.toFixed(3),
+        northing: northing.toFixed(3)
+      };
+    }
+
+    // Actualización de Lecturas en Pantalla
+    function updateGNSSData(pos) {
+      epochCount++;
+      const coords = pos.coords;
+      const lat = coords.latitude;
+      const lon = coords.longitude;
+      const alt = coords.altitude !== null ? coords.altitude : 0;
+      const acc = coords.accuracy;
+      const speed = coords.speed !== null ? (coords.speed * 3.6).toFixed(1) : "0.0";
+      const heading = coords.heading !== null ? coords.heading.toFixed(0) : "0";
+
+      const utm = wgs84ToUTM(lat, lon);
+
+      currentData = {
+        epoch: epochCount,
+        lat: lat,
+        lon: lon,
+        alt: alt,
+        acc: acc,
+        utmE: utm.easting,
+        utmN: utm.northing,
+        utmZone: utm.zone,
+        timestamp: new Date(pos.timestamp).toISOString()
+      };
+
+      // Renderizado
+      latVal.textContent = `${lat.toFixed(8)}°`;
+      lonVal.textContent = `${lon.toFixed(8)}°`;
+      altVal.textContent = `${alt.toFixed(3)} m`;
+      utmZone.textContent = `Zona UTM ${utm.zone}`;
+      utmVal.textContent = `${utm.easting} E , ${utm.northing} N`;
+      
+      accVal.textContent = `±${acc.toFixed(2)} m`;
+      accVal.style.color = acc <= 3 ? 'var(--accent-color)' : (acc <= 7 ? 'var(--warning-color)' : 'var(--danger-color)');
+
+      speedVal.textContent = `${speed} km/h | ${heading}°`;
+      epochVal.textContent = `#${epochCount}`;
+
+      fixStatus.textContent = `FIJACIÓN GNSS L1 ACTIVA (${acc <= 5 ? 'BUENA PRECISIÓN' : 'DEGRADADA'})`;
+      fixStatus.style.color = 'var(--accent-color)';
+      fixStatus.style.borderColor = 'var(--accent-color)';
+    }
+
+    function handleError(err) {
+      fixStatus.textContent = `ERROR GNSS: ${err.message}`;
+      fixStatus.style.color = 'var(--danger-color)';
+      fixStatus.style.borderColor = 'var(--danger-color)';
+    }
+
+    // Iniciar Módulo de Posicionamiento
+    function toggleTracking() {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        startBtn.textContent = "Iniciar Rastreo L1";
+        startBtn.style.background = "var(--accent-color)";
+        fixStatus.textContent = "Rastreo Detenido";
+        fixStatus.style.color = "var(--warning-color)";
+      } else {
+        if (!('geolocation' in navigator)) {
+          alert("El navegador no soporta la API Geolocation.");
+          return;
+        }
+
+        startBtn.textContent = "Detener Rastreo";
+        startBtn.style.background = "var(--danger-color)";
+        fixStatus.textContent = "Inicializando Receptor...";
+
+        watchId = navigator.geolocation.watchPosition(updateGNSSData, handleError, {
+          enableHighAccuracy: true, // Forzar uso de hardware GNSS/GPS puro
+          maximumAge: 0,
+          timeout: 10000
+        });
+      }
+    }
+
+    // Grabación de Vértice Topográfico
+    recordBtn.addEventListener('click', () => {
+      if (!currentData) return alert("Esperando señal fija del receptor...");
+
+      const ptoId = `V-${String(recordedPoints.length + 1).padStart(3, '0')}`;
+      const pointRecord = { id: ptoId, ...currentData };
+      recordedPoints.push(pointRecord);
+
+      pointCount.textContent = recordedPoints.length;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><b>${ptoId}</b></td>
+        <td>${pointRecord.utmE}</td>
+        <td>${pointRecord.utmN}</td>
+        <td>${pointRecord.alt.toFixed(2)}</td>
+        <td style="color: ${pointRecord.acc <= 3 ? 'var(--accent-color)' : 'var(--warning-color)'}">±${pointRecord.acc.toFixed(1)}m</td>
+      `;
+      logTableBody.appendChild(row);
+    });
+
+    // Exportar CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      if (recordedPoints.length === 0) return alert("Sin vértices registrados");
+      let csv = "Punto,Latitud_WGS84,Longitud_WGS84,UTM_Este_m,UTM_Norte_m,Zona_UTM,Altitud_Elipsoidal_m,Precision_m,Fecha_Hora\n";
+      recordedPoints.forEach(p => {
+        csv += `${p.id},${p.lat.toFixed(8)},${p.lon.toFixed(8)},${p.utmE},${p.utmN},${p.utmZone},${p.alt.toFixed(3)},${p.acc.toFixed(2)},${p.timestamp}\n`;
+      });
+      downloadFile(csv, `relevamiento_geodesico_${Date.now()}.csv`, 'text/csv');
+    });
+
+    // Exportar KML (Google Earth)
+    document.getElementById('exportKmlBtn').addEventListener('click', () => {
+      if (recordedPoints.length === 0) return alert("Sin vértices registrados");
+      let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>Levantamiento GNSS L1</name>`;
+
+      recordedPoints.forEach(p => {
+        kml += `
+  <Placemark>
+    <name>${p.id}</name>
+    <description>UTM: ${p.utmZone} E:${p.utmE} N:${p.utmN} | Precision: ±${p.acc.toFixed(2)}m</description>
+    <Point>
+      <coordinates>${p.lon},${p.lat},${p.alt}</coordinates>
+    </Point>
+  </Placemark>`;
+      });
+
+      kml += `\n</Document>\n</kml>`;
+      downloadFile(kml, `puntos_geodesicos_${Date.now()}.kml`, 'application/vnd.google-earth.kml+xml');
+    });
+
+    // Exportar GeoJSON
+    document.getElementById('exportGeoJsonBtn').addEventListener('click', () => {
+      if (recordedPoints.length === 0) return alert("Sin vértices registrados");
+      const features = recordedPoints.map(p => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [p.lon, p.lat, p.alt]
+        },
+        properties: {
+          id: p.id,
+          utm_este: parseFloat(p.utmE),
+          utm_norte: parseFloat(p.utmN),
+          zona_utm: p.utmZone,
+          altitud: p.alt,
+          precision_m: p.acc,
+          timestamp: p.timestamp
+        }
+      }));
+
+      const geojson = { type: "FeatureCollection", features: features };
+      downloadFile(JSON.stringify(geojson, null, 2), `gnss_l1_${Date.now()}.geojson`, 'application/json');
+    });
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    startBtn.addEventListener('click', toggleTracking);
+  </script>
+</body>
+</html>
