@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brújula de Agrimensor Pro</title>
+  <style>
+    :root {
+      --bg-color: #12181b;
+      --panel-bg: #1e272c;
+      --accent-color: #00e676;
+      --brass: #d4af37;
+      --text-color: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 15px;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    header {
+      text-align: center;
+      width: 100%;
+      border-bottom: 2px solid var(--brass);
+      padding-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      color: var(--brass);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 0.7rem;
+      color: #888;
+    }
+
+    /* Contenedor Principal de la Brújula */
+    .compass-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 10px 0;
+    }
+
+    /* Anillo exterior decorativo */
+    .outer-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 8px solid var(--brass);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.3), inset 0 0 15px rgba(0,0,0,0.8);
+      background: radial-gradient(circle, #2a353c 0%, #12181b 100%);
+    }
+
+    /* Mira / Retícula de Orientación */
+    .sight-line {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(-50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .sight-line::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 12px solid #ff1744;
+    }
+
+    /* Limbo Graduado (Gira con el sensor) */
+    .limbo {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+
+    .cardinal {
+      position: absolute;
+      font-weight: bold;
+      font-size: 1.1rem;
+      transform: translate(-50%, -50%);
+    }
+
+    .cardinal.n { top: 12%; left: 50%; color: #ff1744; }
+    .cardinal.e { top: 50%; left: 88%; color: var(--text-color); }
+    .cardinal.s { top: 88%; left: 50%; color: var(--text-color); }
+    .cardinal.w { top: 50%; left: 12%; color: var(--text-color); }
+
+    /* Nivel de Burbuja / Clinómetro integrado */
+    .bubble-level {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80px;
+      height: 80px;
+      border: 2px solid rgba(0, 230, 118, 0.5);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .bubble-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--accent-color);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .bubble {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      background-color: rgba(0, 230, 118, 0.8);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 8px var(--accent-color);
+      transition: transform 0.1s ease-out;
+    }
+
+    /* Panel de Lecturas Topográficas */
+    .readings-panel {
+      width: 100%;
+      background-color: var(--panel-bg);
+      border: 1px solid #334148;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .data-box {
+      background-color: #12181b;
+      padding: 8px;
+      border-radius: 4px;
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .data-box.highlight {
+      border-left-color: var(--brass);
+    }
+
+    .data-label {
+      font-size: 0.65rem;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .data-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    /* Botón de Calibración / Permisos */
+    .btn-action {
+      background: var(--brass);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 5px;
+      width: 100%;
+    }
+
+    .btn-action:active {
+      opacity: 0.8;
+    }
+
+    /* Fondo de marcas graduadas */
+    .ticks {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Brújula de Agrimensor</h1>
+    <div class="subtitle">Topografía & Orientación de Precisión</div>
+  </header>
+
+  <div class="compass-container">
+    <div class="outer-ring"></div>
+    <div class="sight-line"></div>
+    
+    <div class="bubble-level">
+      <div class="bubble-center"></div>
+      <div id="bubble" class="bubble"></div>
+    </div>
+
+    <div id="limbo" class="limbo">
+      <div class="cardinal n">N</div>
+      <div class="cardinal e">E</div>
+      <div class="cardinal s">S</div>
+      <div class="cardinal w">W</div>
+      <canvas id="ticksCanvas" width="300" height="300" class="ticks"></canvas>
+    </div>
+  </div>
+
+  <div class="readings-panel">
+    <div class="data-box highlight">
+      <div class="data-label">Acimut (Az)</div>
+      <div id="azimuthVal" class="data-value">000° 00'</div>
+    </div>
+    
+    <div class="data-box highlight">
+      <div class="data-label">Rumbo (Agrimensor)</div>
+      <div id="bearingVal" class="data-value">N 00° E</div>
+    </div>
+
+    <div class="data-box">
+      <div class="data-label">Inclinación (Pitch)</div>
+      <div id="pitchVal" class="data-value">0.0°</div>
+    </div>
+
+    <div class="data-box">
+      <div class="data-label">Pendiente (Roll)</div>
+      <div id="rollVal" class="data-value">0.0°</div>
+    </div>
+  </div>
+
+  <button id="startBtn" class="btn-action">Activar Sensores</button>
+
+  <script>
+    const limbo = document.getElementById('limbo');
+    const azimuthVal = document.getElementById('azimuthVal');
+    const bearingVal = document.getElementById('bearingVal');
+    const pitchVal = document.getElementById('pitchVal');
+    const rollVal = document.getElementById('rollVal');
+    const bubble = document.getElementById('bubble');
+    const startBtn = document.getElementById('startBtn');
+    const ticksCanvas = document.getElementById('ticksCanvas');
+
+    // Dibuja las marcas del limbo graduado (cada 5 y 10 grados)
+    function drawLimboTicks() {
+      const ctx = ticksCanvas.getContext('2d');
+      const cx = 150, cy = 150, r = 140;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+
+      for (let deg = 0; deg < 360; deg += 5) {
+        const rad = (deg - 90) * Math.PI / 180;
+        const isMajor = deg % 10 === 0;
+        const len = isMajor ? 12 : 6;
+
+        const x1 = cx + (r - len) * Math.cos(rad);
+        const y1 = cy + (r - len) * Math.sin(rad);
+        const x2 = cx + r * Math.cos(rad);
+        const y2 = cy + r * Math.sin(rad);
+
+        ctx.beginPath();
+        ctx.lineWidth = isMajor ? 1.5 : 1;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+    drawLimboTicks();
+
+    // Convierte acimut (0 - 360°) a Rumbo Cuadrantal Topográfico (ej: N 45° 30' E)
+    function azimuthToQuadrantBearing(az) {
+      let quad = '';
+      let angle = 0;
+
+      if (az >= 0 && az <= 90) {
+        quad = `N ${formatDegrees(az)} E`;
+      } else if (az > 90 && az <= 180) {
+        quad = `S ${formatDegrees(180 - az)} E`;
+      } else if (az > 180 && az <= 270) {
+        quad = `S ${formatDegrees(az - 180)} W`;
+      } else {
+        quad = `N ${formatDegrees(360 - az)} W`;
+      }
+      return quad;
+    }
+
+    // Formatea grados decimales a Sexagesimal (Grados y Minutos)
+    function formatDegrees(degVal) {
+      const d = Math.floor(degVal);
+      const m = Math.round((degVal - d) * 60);
+      return `${String(d).padStart(2, '0')}°${String(m).padStart(2, '0')}'`;
+    }
+
+    // Manejo de eventos de orientación
+    function handleOrientation(event) {
+      // 1. Cálculo de Acimut
+      let alpha = event.alpha; // Rotación alrededor del eje Z
+      let compassHeading = 0;
+
+      if (event.webkitCompassHeading) {
+        // Soporte nativo para iOS (Norte Magnético preciso)
+        compassHeading = event.webkitCompassHeading;
+      } else if (alpha !== null) {
+        // Fallback para Android / Estándar W3C
+        compassHeading = 360 - alpha;
+      }
+
+      // Normalizar 0 - 360
+      compassHeading = (compassHeading + 360) % 360;
+
+      // Rotar el limbo (al revés del rumbo para mantener el Norte alineado)
+      limbo.style.transform = `rotate(${-compassHeading}deg)`;
+
+      // Actualizar datos de rumbo
+      azimuthVal.textContent = formatDegrees(compassHeading);
+      bearingVal.textContent = azimuthToQuadrantBearing(compassHeading);
+
+      // 2. Clinómetro y Nivel de Burbuja (Pitch y Roll)
+      const beta = event.beta || 0;   // Inclinación X (-180 a 180)
+      const gamma = event.gamma || 0; // Inclinación Y (-90 a 90)
+
+      pitchVal.textContent = `${beta.toFixed(1)}°`;
+      rollVal.textContent = `${gamma.toFixed(1)}°`;
+
+      // Mover la burbuja del nivel (limitado al radio del contenedor)
+      const maxDistance = 30; // píxeles máximos
+      const bubbleX = Math.max(-maxDistance, Math.min(maxDistance, gamma));
+      const bubbleY = Math.max(-maxDistance, Math.min(maxDistance, beta));
+
+      bubble.style.transform = `translate(calc(-50% + ${bubbleX}px), calc(-50% + ${bubbleY}px))`;
+    }
+
+    // Solicitar Permisos en iOS 13+ y Activar Sensores
+    async function initSensors() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permissionState = await DeviceOrientationEvent.requestPermission();
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+            startBtn.style.display = 'none';
+          } else {
+            alert('Permiso denegado para acceder a los sensores de orientación.');
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      } else if ('DeviceOrientationEvent' in window) {
+        // Android u otros dispositivos sin API de permisos explícita
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        startBtn.style.display = 'none';
+      } else {
+        alert('Tu navegador o dispositivo no soporta sensores de orientación.');
+      }
+    }
+
+    startBtn.addEventListener('click', initSensors);
+  </script>
+</body>
+</html>
