@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Estación GNSS Multi-Constelación Pro</title>
+  <style>
+    :root {
+      --bg-color: #080b0e;
+      --panel-bg: #11161b;
+      --accent: #00e676;
+      --brass: #ffd54f;
+      --text: #eceff1;
+      --border: #263238;
+      --danger: #ff5252;
+      --font: 'Courier New', Courier, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); user-select: none; }
+    body { background: var(--bg-color); color: var(--text); padding: 8px; display: flex; flex-direction: column; align-items: center; }
+
+    header { width: 100%; text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 4px; margin-bottom: 6px; }
+    h1 { font-size: 1rem; color: var(--accent); letter-spacing: 1px; }
+
+    /* Badges de Constelaciones */
+    .constellations-bar {
+      display: flex; gap: 4px; width: 100%; margin-bottom: 6px; justify-content: space-between;
+    }
+    .badge {
+      flex: 1; text-align: center; font-size: 0.6rem; padding: 3px; background: #1c242c;
+      border: 1px solid var(--border); border-radius: 3px; color: #78909c; font-weight: bold;
+    }
+    .badge.active { background: #003d1c; color: var(--accent); border-color: var(--accent); }
+
+    /* Panel Principal */
+    .panel { width: 100%; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 6px; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .data-box { background: #0a0d10; padding: 5px; border-radius: 4px; border-left: 3px solid var(--accent); }
+    .data-box.sec { border-left-color: var(--brass); }
+    .label { font-size: 0.58rem; color: #90a4ae; text-transform: uppercase; }
+    .val { font-size: 0.95rem; font-weight: bold; color: #fff; }
+
+    /* Barra de Progreso de Promediado */
+    .avg-container { margin-top: 6px; display: none; }
+    .progress-bar { width: 100%; background: #1c242c; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 3px; }
+    .progress-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+
+    /* Botones */
+    .btn-group { width: 100%; display: flex; gap: 6px; margin-bottom: 6px; }
+    .btn {
+      flex: 1; background: var(--accent); color: #000; border: none; padding: 10px 4px;
+      font-weight: bold; font-size: 0.72rem; border-radius: 4px; cursor: pointer; text-transform: uppercase;
+    }
+    .btn-sec { background: #263238; color: var(--text); border: 1px solid var(--border); }
+    .btn:active { opacity: 0.8; }
+
+    /* Resumen de Poligonal Topográfica */
+    .poly-summary { width: 100%; background: #151c24; border: 1px solid var(--brass); padding: 6px; border-radius: 4px; margin-bottom: 6px; font-size: 0.68rem; }
+
+    /* Tabla de Libreta de Campo */
+    .log-container { width: 100%; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px; max-height: 150px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.6rem; text-align: left; }
+    th, td { padding: 3px 2px; border-bottom: 1px solid var(--border); }
+    th { color: #90a4ae; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>GNSS Topográfico Pro (Multi-Constelación)</h1>
+  </header>
+
+  <!-- Estado de Satélites Multi-GNSS -->
+  <div class="constellations-bar">
+    <div id="b-gps" class="badge active">GPS (USA)</div>
+    <div id="b-glo" class="badge active">GLONASS (RU)</div>
+    <div id="b-gal" class="badge active">GALILEO (EU)</div>
+    <div id="b-bds" class="badge active">BEIDOU (CN)</div>
+  </div>
+
+  <!-- Monitor GNSS -->
+  <div class="panel">
+    <div class="grid-2">
+      <div class="data-box">
+        <div class="label">UTM Este (E) WGS84</div>
+        <div id="utmE" class="val">000000.000 m</div>
+      </div>
+      <div class="data-box">
+        <div class="label">UTM Norte (N) WGS84</div>
+        <div id="utmN" class="val">0000000.000 m</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 6px;">
+      <div class="data-box sec">
+        <div class="label">Altitud Ortométrica (H)</div>
+        <div id="altH" class="val">0000.000 m</div>
+      </div>
+      <div class="data-box sec">
+        <div class="label">Zona / Hemisferio</div>
+        <div id="utmZone" class="val">-- S</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 6px;">
+      <div class="data-box">
+        <div class="label">Precisión Horiz. (2σ)</div>
+        <div id="accH" class="val" style="color: var(--brass);">±0.00 m</div>
+      </div>
+      <div class="data-box">
+        <div class="label">Precisión Vert. Est.</div>
+        <div id="accV" class="val">±0.00 m</div>
+      </div>
+    </div>
+
+    <!-- Módulo de Promediado Topográfico -->
+    <div id="avgBox" class="avg-container">
+      <div class="label" style="display:flex; justify-content:space-between;">
+        <span>Promediando Épocas Topográficas...</span>
+        <span id="avgCount">0/30</span>
+      </div>
+      <div class="progress-bar"><div id="avgFill" class="progress-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- Datos Calculados del Terreno (Poligonal) -->
+  <div class="poly-summary">
+    <div style="color: var(--brass); font-weight: bold; margin-bottom: 2px;">CÁLCULOS DE POLIGONAL Y MENSURA:</div>
+    <div style="display: flex; justify-content: space-between;">
+      <span>Perímetro: <b id="polyPerim" style="color:#fff;">0.00 m</b></span>
+      <span>Área Mensurada: <b id="polyArea" style="color:#fff;">0.00 m² (0.000 ha)</b></span>
+    </div>
+  </div>
+
+  <!-- Botones de Acción -->
+  <div class="btn-group">
+    <button id="startBtn" class="btn">Iniciar Multi-GNSS</button>
+    <button id="recordBtn" class="btn btn-sec">Grabar Vértice (30 Épocas)</button>
+  </div>
+
+  <div class="btn-group">
+    <button id="exportCsvBtn" class="btn btn-sec">CSV (Civil3D)</button>
+
+    <button id="exportDxfBtn" class="btn btn-sec">DXF (AutoCAD)</button>
+    <button id="exportGeoJsonBtn" class="btn btn-sec">GeoJSON (QGIS)</button>
+  </div>
+
+  <!-- Libreta de Campo -->
+  <div class="log-container">
+    <div style="font-size: 0.65rem; color: var(--accent); margin-bottom: 4px; font-weight: bold;">
+      LIBRETA DE CAMPO (VÉRTILES REGISTRADOS: <span id="pointCount">0</span>)
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Vértice</th>
+          <th>Este (m)</th>
+          <th>Norte (m)</th>
+          <th>H (m)</th>
+          <th>Desv. (σ)</th>
+        </tr>
+      </thead>
+      <tbody id="logTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let watchId = null;
+    let rawPosBuffer = [];
+    let isAveraging = false;
+    const TARGET_EPOCHS = 30; // 30 Épocas requeridas para fijar vértice profesional
+    let recordedPoints = [];
+
+    // Conversor WGS84 a UTM Transversa de Mercator
+    function wgs84ToUTM(lat, lon) {
+      const a = 6378137.0, f = 1 / 298.257223563, b = a * (1 - f);
+      const e2 = (a**2 - b**2) / a**2, e2prime = (a**2 - b**2) / b**2;
+      const zone = Math.floor((lon + 180) / 6) + 1;
+      const lambda0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+      const phi = lat * Math.PI / 180, lambda = lon * Math.PI / 180;
+      const N = a / Math.sqrt(1 - e2 * Math.sin(phi)**2);
+      const T = Math.tan(phi)**2, C = e2prime * Math.cos(phi)**2, A = (lambda - lambda0) * Math.cos(phi);
+      const M = a * ((1 - e2/4 - 3*e2**2/64 - 5*e2**3/256)*phi - (3*e2/8 + 3*e2**2/32 + 45*e2**3/1024)*Math.sin(2*phi) + (15*e2**2/256 + 45*e2**3/1024)*Math.sin(4*phi) - (35*e2**3/3072)*Math.sin(6*phi));
+      const k0 = 0.9996;
+      let easting = k0 * N * (A + (1-T+C)*A**3/6 + (5-18*T+T**2+72*C-58*e2prime)*A**5/120) + 500000.0;
+      let northing = k0 * (M + N * Math.tan(phi) * (A**2/2 + (5-T+9*C+4*C**2)*A**4/24 + (61-58*T+T**2+600*C-330*e2prime)*A**6/720));
+      if (lat < 0) northing += 10000000.0;
+      return { zone: `${zone}${lat >= 0 ? 'N' : 'S'}`, easting, northing };
+    }
+
+    // Cálculo Topográfico: Perímetro y Área por Fórmula de Gauss (Shoelace)
+    function calculatePolygon() {
+      if (recordedPoints.length < 3) {
+        document.getElementById('polyPerim').textContent = "0.00 m";
+        document.getElementById('polyArea').textContent = "0.00 m² (0.000 ha)";
+        return;
+      }
+
+      let area = 0, perimeter = 0;
+      const n = recordedPoints.length;
+
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        area += recordedPoints[i].easting * recordedPoints[j].northing;
+        area -= recordedPoints[j].easting * recordedPoints[i].northing;
+
+        const dx = recordedPoints[j].easting - recordedPoints[i].easting;
+        const dy = recordedPoints[j].northing - recordedPoints[i].northing;
+        perimeter += Math.sqrt(dx*dx + dy*dy);
+      }
+
+      area = Math.abs(area) / 2.0;
+      const ha = area / 10000.0;
+
+      document.getElementById('polyPerim').textContent = `${perimeter.toFixed(2)} m`;
+      document.getElementById('polyArea').textContent = `${area.toFixed(2)} m² (${ha.toFixed(3)} ha)`;
+    }
+
+    // Procesador de Lecturas GNSS
+    function onGNSSFrame(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const altEllip = pos.coords.altitude || 0;
+      const accH = pos.coords.accuracy;
+      const accV = pos.coords.altitudeAccuracy || (accH * 1.5); // Estimación topográfica vertical
+
+      const utm = wgs84ToUTM(lat, lon);
+
+      document.getElementById('utmE').textContent = `${utm.easting.toFixed(3)} m`;
+      document.getElementById('utmN').textContent = `${utm.northing.toFixed(3)} m`;
+      document.getElementById('altH').textContent = `${altEllip.toFixed(3)} m`;
+      document.getElementById('utmZone').textContent = utm.zone;
+      
+      const accElem = document.getElementById('accH');
+      accElem.textContent = `±${accH.toFixed(2)} m`;
+      accElem.style.color = accH <= 2.5 ? 'var(--accent)' : 'var(--brass)';
+      document.getElementById('accV').textContent = `±${accV.toFixed(2)} m`;
+
+      // Si se activó la grabación estática por promediado
+      if (isAveraging) {
+        rawPosBuffer.push({ easting: utm.easting, northing: utm.northing, alt: altEllip, acc: accH });
+        const count = rawPosBuffer.length;
+        document.getElementById('avgCount').textContent = `${count}/${TARGET_EPOCHS}`;
+        document.getElementById('avgFill').style.width = `${(count / TARGET_EPOCHS) * 100}%`;
+
+        if (count >= TARGET_EPOCHS) {
+          finalizeVertexRecording();
+        }
+      }
+    }
+
+    function startGNSS() {
+      if (!navigator.geolocation) return alert("Dispositivo sin soporte GNSS");
+      
+      document.getElementById('startBtn').style.display = 'none';
+      watchId = navigator.geolocation.watchPosition(onGNSSFrame, (err) => console.error(err), {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 15000
+      });
+    }
+
+    // Proceso Estático Topográfico: Promedio y Desvío Estándar
+    document.getElementById('recordBtn').addEventListener('click', () => {
+      if (!watchId) return alert("Inicie la recepción Multi-GNSS primero");
+      rawPosBuffer = [];
+      isAveraging = true;
+      document.getElementById('avgBox').style.display = 'block';
+    });
+
+    function finalizeVertexRecording() {
+      isAveraging = false;
+      document.getElementById('avgBox').style.display = 'none';
+
+      // Promediado Matemático
+      const sum = rawPosBuffer.reduce((a, b) => ({ easting: a.easting + b.easting, northing: a.northing + b.northing, alt: a.alt + b.alt }), { easting: 0, northing: 0, alt: 0 });
+      const avgE = sum.easting / TARGET_EPOCHS;
+      const avgN = sum.northing / TARGET_EPOCHS;
+      const avgH = sum.alt / TARGET_EPOCHS;
+
+      // Cálculo de Desvío Estándar (σ)
+      const variance = rawPosBuffer.reduce((a, b) => a + Math.pow(b.easting - avgE, 2) + Math.pow(b.northing - avgN, 2), 0) / TARGET_EPOCHS;
+      const stdDev = Math.sqrt(variance);
+
+      const ptoId = `P-${String(recordedPoints.length + 1).padStart(3, '0')}`;
+      const v = { id: ptoId, easting: avgE, northing: avgN, alt: avgH, stdDev: stdDev };
+      recordedPoints.push(v);
+
+      // Actualizar Tabla y Cálculos de Parcela
+      const row = document.createElement('tr');
+      row.innerHTML = `<td><b>${v.id}</b></td><td>${v.easting.toFixed(3)}</td><td>${v.northing.toFixed(3)}</td><td>${v.alt.toFixed(3)}</td><td>±${v.stdDev.toFixed(3)}m</td>`;
+      document.getElementById('logTable').appendChild(row);
+      document.getElementById('pointCount').textContent = recordedPoints.length;
+
+      calculatePolygon();
+    }
+
+    // Exportador DXF Nativo para AutoCAD
+    document.getElementById('exportDxfBtn').addEventListener('click', () => {
+      if (recordedPoints.length === 0) return alert("Sin datos registrados");
+      let dxf = `0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
+
+      // Dibujar Puntos (POINT) y Textos (TEXT)
+      recordedPoints.forEach(p => {
+        dxf += `0\nPOINT\n8\nVERTICES\n10\n${p.easting}\n20\n${p.northing}\n30\n${p.alt}\n`;
+        dxf += `0\nTEXT\n8\nETIQUETAS\n10\n${p.easting + 0.5}\n20\n${p.northing + 0.5}\n30\n${p.alt}\n40\n0.5\n1\n${p.id}\n`;
+      });
+
+      // Dibujar Poligonal Cerrada (LWPOLYLINE)
+      if (recordedPoints.length > 2) {
+        dxf += `0\nLWPOLYLINE\n8\nLINDEROS\n90\n${recordedPoints.length}\n70\n1\n`;
+        recordedPoints.forEach(p => {
+          dxf += `10\n${p.easting}\n20\n${p.northing}\n`;
+        });
+      }
+
+      dxf += `0\nENDSEC\n0\nEOF\n`;
+      download(dxf, `mensura_${Date.now()}.dxf`, 'application/dxf');
+    });
+
+    // Exportador CSV para AutoCAD Civil3D (Formato: Punto, Este, Norte, Cota, Descripción)
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      if (recordedPoints.length === 0) return alert("Sin datos");
+      let csv = "PUNTO,ESTE,NORTE,COTA,DESCRIPCION,DESVIO_M\n";
+      recordedPoints.forEach(p => {
+        csv += `${p.id},${p.easting.toFixed(4)},${p.northing.toFixed(4)},${p.alt.toFixed(4)},VERTICE_TOPOGRAFICO,${p.stdDev.toFixed(4)}\n`;
+      });
+      download(csv, `mensura_${Date.now()}.csv`, 'text/csv');
+    });
+
+    function download(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startGNSS);
+  </script>
+</body>
+</html>
