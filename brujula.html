@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Brújula de Agrimensor Pro</title>
+  <title>Brújula Agrimensura Pro + Topografía GPS</title>
   <style>
     :root {
-      --bg-color: #0f1416;
-      --panel-bg: #1a2226;
-      --accent-color: #00e676;
+      --bg-color: #0d1117;
+      --panel-bg: #161b22;
+      --accent-color: #3fb950;
       --brass: #d4af37;
-      --text-color: #f5f5f5;
-      --danger: #ff1744;
+      --text-color: #f0f6fc;
+      --danger: #f85149;
+      --border-color: #30363d;
     }
 
     * {
@@ -28,17 +29,17 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
       min-height: 100vh;
-      padding: 12px;
-      overflow: hidden;
+      padding: 10px;
+      overflow-x: hidden;
     }
 
     header {
       text-align: center;
       width: 100%;
       border-bottom: 2px solid var(--brass);
-      padding-bottom: 6px;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     h1 {
@@ -47,25 +48,24 @@
       letter-spacing: 1px;
     }
 
-    /* Mensaje de Advertencia / Estado */
     #statusBanner {
       width: 100%;
-      background-color: #2a1b00;
+      background-color: #271c00;
       color: var(--brass);
       border: 1px solid var(--brass);
-      padding: 6px;
-      font-size: 0.7rem;
+      padding: 5px;
+      font-size: 0.68rem;
       text-align: center;
       border-radius: 4px;
-      margin-top: 6px;
+      margin-bottom: 8px;
     }
 
-    /* Contenedor Principal */
+    /* Brújula */
     .compass-container {
       position: relative;
-      width: 280px;
-      height: 280px;
-      margin: 10px 0;
+      width: 250px;
+      height: 250px;
+      margin: 4px 0;
     }
 
     .outer-ring {
@@ -73,9 +73,9 @@
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      border: 6px solid var(--brass);
-      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-      background: radial-gradient(circle, #222b30 0%, #0f1416 100%);
+      border: 5px solid var(--brass);
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+      background: radial-gradient(circle, #1f242c 0%, #0d1117 100%);
     }
 
     .sight-line {
@@ -84,7 +84,7 @@
       left: 50%;
       width: 2px;
       height: 100%;
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.35);
       transform: translateX(-50%);
       z-index: 5;
       pointer-events: none;
@@ -96,8 +96,8 @@
       top: 2px;
       left: 50%;
       transform: translateX(-50%);
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
       border-top: 10px solid var(--danger);
     }
 
@@ -112,7 +112,7 @@
     .cardinal {
       position: absolute;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1rem;
       transform: translate(-50%, -50%);
     }
 
@@ -126,9 +126,9 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 70px;
-      height: 70px;
-      border: 1.5px solid rgba(0, 230, 118, 0.6);
+      width: 60px;
+      height: 60px;
+      border: 1.5px solid rgba(63, 185, 80, 0.6);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       background: rgba(0, 0, 0, 0.4);
@@ -158,69 +158,112 @@
       box-shadow: 0 0 6px var(--accent-color);
     }
 
-    /* Panel de Lecturas */
+    /* Paneles de Lecturas */
     .readings-panel {
       width: 100%;
       background-color: var(--panel-bg);
-      border: 1px solid #2a363c;
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 10px;
+      padding: 8px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
+      margin-top: 6px;
     }
 
     .data-box {
-      background-color: #0f1416;
-      padding: 6px 8px;
+      background-color: #0d1117;
+      padding: 5px 8px;
       border-radius: 4px;
       border-left: 3px solid var(--accent-color);
     }
 
-    .data-box.highlight {
-      border-left-color: var(--brass);
-    }
+    .data-box.highlight { border-left-color: var(--brass); }
 
     .data-label {
-      font-size: 0.6rem;
-      color: #888;
+      font-size: 0.58rem;
+      color: #8b949e;
       text-transform: uppercase;
     }
 
     .data-value {
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: bold;
       color: #fff;
     }
 
-    .btn-action {
+    /* Controles y Botones */
+    .btn-group {
+      width: 100%;
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      flex: 1;
       background: var(--brass);
       color: #000;
       border: none;
-      padding: 12px;
+      padding: 10px 6px;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       border-radius: 4px;
       cursor: pointer;
-      width: 100%;
       text-transform: uppercase;
-      margin-top: 4px;
     }
 
-    .ticks {
-      position: absolute;
-      width: 100%;
-      height: 100%;
+    .btn-sec {
+      background: #21262d;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
     }
+
+    .btn:active { opacity: 0.8; }
+
+    /* Tabla de Puntos Registrados */
+    .log-container {
+      width: 100%;
+      margin-top: 10px;
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .log-title {
+      font-size: 0.7rem;
+      color: var(--brass);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.65rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 3px 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th { color: #8b949e; }
+
+    .ticks { position: absolute; width: 100%; height: 100%; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Brújula Agrimensura</h1>
+    <h1>Brújula Agrimensura Pro</h1>
   </header>
 
-  <div id="statusBanner">Presiona "Iniciar Sensores" para calibrar</div>
+  <div id="statusBanner">Presiona "Iniciar Sensores"</div>
 
   <div class="compass-container">
     <div class="outer-ring"></div>
@@ -236,56 +279,101 @@
       <div class="cardinal e">E</div>
       <div class="cardinal s">S</div>
       <div class="cardinal w">W</div>
-      <canvas id="ticksCanvas" width="280" height="280" class="ticks"></canvas>
+      <canvas id="ticksCanvas" width="250" height="250" class="ticks"></canvas>
     </div>
   </div>
 
+  <!-- Lecturas Topográficas Principal -->
   <div class="readings-panel">
     <div class="data-box highlight">
-      <div class="data-label">Acimut (Az)</div>
-      <div id="azimuthVal" class="data-value">000° 00'</div>
+      <div class="data-label">Acimut Magnético</div>
+      <div id="azMagVal" class="data-value">000° 00'</div>
     </div>
     
     <div class="data-box highlight">
-      <div class="data-label">Rumbo (Cuadrantal)</div>
+      <div class="data-label">Acimut Verdadero (Astr.)</div>
+      <div id="azTrueVal" class="data-value">000° 00'</div>
+    </div>
+
+    <div class="data-box highlight">
+      <div class="data-label">Rumbo Cuadrantal</div>
       <div id="bearingVal" class="data-value">N 00° E</div>
     </div>
 
     <div class="data-box">
-      <div class="data-label">Inclinación (Pitch)</div>
-      <div id="pitchVal" class="data-value">0.0°</div>
+      <div class="data-label">Declinación (D)</div>
+      <div id="declinationVal" class="data-value">0.00°</div>
     </div>
 
     <div class="data-box">
-      <div class="data-label">Pendiente (Roll)</div>
-      <div id="rollVal" class="data-value">0.0°</div>
+      <div class="data-label">Inclinación / Pendiente</div>
+      <div id="pitchVal" class="data-value">0.0° (0%)</div>
+    </div>
+
+    <div class="data-box">
+      <div class="data-label">Coordenadas GPS</div>
+      <div id="gpsVal" class="data-value">Sin GPS</div>
     </div>
   </div>
 
-  <button id="startBtn" class="btn-action">Iniciar Sensores</button>
+  <div class="btn-group">
+    <button id="startBtn" class="btn">Iniciar Sensores</button>
+    <button id="recordBtn" class="btn btn-sec">Guardar Punto</button>
+  </div>
+
+  <div class="btn-group">
+    <button id="exportCsvBtn" class="btn btn-sec">Exportar CSV</button>
+    <button id="exportGeoJsonBtn" class="btn btn-sec">Exportar GeoJSON</button>
+  </div>
+
+  <!-- Registro de campo -->
+  <div class="log-container">
+    <div class="log-title">Registro de Puntos de Campo (<span id="pointCount">0</span>)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Pto</th>
+          <th>Az.Verd</th>
+          <th>Rumbo</th>
+          <th>Inc</th>
+          <th>Lat/Lon</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody"></tbody>
+    </table>
+  </div>
 
   <script>
+    let currentAzMag = 0;
+    let currentAzTrue = 0;
+    let currentPitch = 0;
+    let currentRoll = 0;
+    let currentLat = null;
+    let currentLon = null;
+    let declination = 0; // Valor por defecto
+    let points = [];
+
     const limbo = document.getElementById('limbo');
-    const azimuthVal = document.getElementById('azimuthVal');
+    const azMagVal = document.getElementById('azMagVal');
+    const azTrueVal = document.getElementById('azTrueVal');
     const bearingVal = document.getElementById('bearingVal');
+    const declinationVal = document.getElementById('declinationVal');
     const pitchVal = document.getElementById('pitchVal');
-    const rollVal = document.getElementById('rollVal');
+    const gpsVal = document.getElementById('gpsVal');
     const bubble = document.getElementById('bubble');
     const startBtn = document.getElementById('startBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportGeoJsonBtn = document.getElementById('exportGeoJsonBtn');
     const statusBanner = document.getElementById('statusBanner');
     const ticksCanvas = document.getElementById('ticksCanvas');
-
-    // Comprobación de Protocolo Seguro (HTTPS)
-    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      statusBanner.style.backgroundColor = '#3a0000';
-      statusBanner.style.color = '#ff5252';
-      statusBanner.textContent = "Error: Requiere HTTPS para acceder a los sensores del móvil.";
-    }
+    const logTableBody = document.getElementById('logTableBody');
+    const pointCount = document.getElementById('pointCount');
 
     // Dibujar Limbo
     function drawLimboTicks() {
       const ctx = ticksCanvas.getContext('2d');
-      const cx = 140, cy = 140, r = 130;
+      const cx = 125, cy = 125, r = 118;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
 
       for (let deg = 0; deg < 360; deg += 5) {
@@ -309,6 +397,7 @@
 
     // Formato Cuadrantal Topográfico
     function azimuthToQuadrantBearing(az) {
+      az = (az + 360) % 360;
       if (az >= 0 && az <= 90) return `N ${formatDegrees(az)} E`;
       if (az > 90 && az <= 180) return `S ${formatDegrees(180 - az)} E`;
       if (az > 180 && az <= 270) return `S ${formatDegrees(az - 180)} W`;
@@ -321,21 +410,58 @@
       return `${String(d).padStart(2, '0')}°${String(m).padStart(2, '0')}'`;
     }
 
-    // Procesar datos del sensor
+    // Obtener Declinación Magnética de la API de NOAA
+    async function fetchMagneticDeclination(lat, lon) {
+      try {
+        const dateStr = new Date().toISOString().split('T')[0];
+        const url = `https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${lat}&lon1=${lon}&resultFormat=json`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data && data.result && data.result[0]) {
+          declination = data.result[0].declination;
+          declinationVal.textContent = `${declination > 0 ? '+' : ''}${declination.toFixed(2)}°`;
+        }
+      } catch (err) {
+        // Estimación / Fallback si falla la API sin red
+        declinationVal.textContent = `${declination.toFixed(2)}° (Manual)`;
+      }
+    }
+
+    // Geolocalización del dispositivo
+    function initGPS() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition((pos) => {
+          currentLat = pos.coords.latitude;
+          currentLon = pos.coords.longitude;
+          gpsVal.textContent = `${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`;
+          fetchMagneticDeclination(currentLat, currentLon);
+        }, (err) => {
+          gpsVal.textContent = "GPS Off/Sin Permiso";
+        }, { enableHighAccuracy: true });
+      }
+    }
+
+    // Procesar Datos de Orientación
     function processOrientation(heading, beta, gamma) {
-      heading = (heading + 360) % 360;
+      currentAzMag = (heading + 360) % 360;
+      currentAzTrue = (currentAzMag + declination + 360) % 360;
+      currentPitch = beta;
+      currentRoll = gamma;
 
-      // Rotación suave del limbo
-      limbo.style.transform = `rotate(${-heading}deg)`;
+      // Rotar limbo (Alineado al Norte Magnético o Verdadero según preferencia)
+      limbo.style.transform = `rotate(${-currentAzTrue}deg)`;
 
-      // Actualizar interfaz
-      azimuthVal.textContent = formatDegrees(heading);
-      bearingVal.textContent = azimuthToQuadrantBearing(heading);
-      pitchVal.textContent = `${beta.toFixed(1)}°`;
-      rollVal.textContent = `${gamma.toFixed(1)}°`;
+      // Actualizar UI
+      azMagVal.textContent = formatDegrees(currentAzMag);
+      azTrueVal.textContent = formatDegrees(currentAzTrue);
+      bearingVal.textContent = azimuthToQuadrantBearing(currentAzTrue);
 
-      // Posición de la burbuja
-      const maxDist = 25;
+      // Inclinación y Pendiente %
+      const slopePercent = Math.tan(currentPitch * Math.PI / 180) * 100;
+      pitchVal.textContent = `${currentPitch.toFixed(1)}° (${slopePercent.toFixed(1)}%)`;
+
+      // Burbuja
+      const maxDist = 22;
       const bx = Math.max(-maxDist, Math.min(maxDist, gamma));
       const by = Math.max(-maxDist, Math.min(maxDist, beta));
       bubble.style.transform = `translate(calc(-50% + ${bx}px), calc(-50% + ${by}px))`;
@@ -343,51 +469,118 @@
 
     function handleEvent(e) {
       let heading = null;
-
-      // 1. Detección en iOS (webkitCompassHeading)
       if (e.webkitCompassHeading !== undefined) {
         heading = e.webkitCompassHeading;
-      } 
-      // 2. Detección Absoluta en Android (deviceorientationabsolute)
-      else if (e.alpha !== null) {
+      } else if (e.alpha !== null) {
         heading = e.absolute || e.type === 'deviceorientationabsolute' ? (360 - e.alpha) : e.alpha;
       }
 
       if (heading !== null) {
-        statusBanner.style.backgroundColor = '#002a0f';
-        statusBanner.style.color = '#00e676';
-        statusBanner.textContent = "Sensores Activos y Calibrados";
+        statusBanner.style.backgroundColor = '#0d2818';
+        statusBanner.style.color = '#3fb950';
+        statusBanner.textContent = "Sensores y GPS Activos";
         processOrientation(heading, e.beta || 0, e.gamma || 0);
       }
     }
 
-    // Activación de eventos
     async function startSensors() {
       startBtn.style.display = 'none';
+      initGPS();
 
-      // iOS 13+ requerimiento explícito
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
-          const response = await DeviceOrientationEvent.requestPermission();
-          if (response === 'granted') {
+          const resp = await DeviceOrientationEvent.requestPermission();
+          if (resp === 'granted') {
             window.addEventListener('deviceorientation', handleEvent, true);
-          } else {
-            statusBanner.textContent = "Permiso denegado por el usuario.";
           }
         } catch (err) {
-          statusBanner.textContent = "Error al solicitar permisos: " + err.message;
+          statusBanner.textContent = "Error Permisos: " + err.message;
         }
       } else {
-        // Android / W3C Estándar
         if ('ondeviceorientationabsolute' in window) {
           window.addEventListener('deviceorientationabsolute', handleEvent, true);
-        } else if ('ondeviceorientation' in window) {
-          window.addEventListener('deviceorientation', handleEvent, true);
         } else {
-          statusBanner.textContent = "Este dispositivo/navegador no soporta sensores de orientación.";
+          window.addEventListener('deviceorientation', handleEvent, true);
         }
       }
     }
+
+    // Registrar Punto Topográfico
+    recordBtn.addEventListener('click', () => {
+      const ptoNum = points.length + 1;
+      const pointData = {
+        id: ptoNum,
+        azMag: currentAzMag.toFixed(2),
+        azTrue: currentAzTrue.toFixed(2),
+        bearing: azimuthToQuadrantBearing(currentAzTrue),
+        pitch: currentPitch.toFixed(1),
+        lat: currentLat ? currentLat.toFixed(6) : "N/A",
+        lon: currentLon ? currentLon.toFixed(6) : "N/A",
+        timestamp: new Date().toISOString()
+      };
+      
+      points.push(pointData);
+      pointCount.textContent = points.length;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>P${ptoNum}</td>
+        <td>${formatDegrees(currentAzTrue)}</td>
+        <td>${pointData.bearing}</td>
+        <td>${pointData.pitch}°</td>
+        <td>${pointData.lat}, ${pointData.lon}</td>
+      `;
+      logTableBody.appendChild(row);
+    });
+
+    // Exportar CSV (Excel / Civil3D)
+    exportCsvBtn.addEventListener('click', () => {
+      if (points.length === 0) return alert("No hay puntos registrados");
+      let csvContent = "data:text/csv;charset=utf-8,Punto,Azimut_Mag,Azimut_Verdadero,Rumbo,Inclinacion_Grados,Latitud,Longitud,Fecha_Hora\n";
+      points.forEach(p => {
+        csvContent += `${p.id},${p.azMag},${p.azTrue},"${p.bearing}",${p.pitch},${p.lat},${p.lon},${p.timestamp}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `lev_topografico_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Exportar GeoJSON (QGIS / ArcGIS)
+    exportGeoJsonBtn.addEventListener('click', () => {
+      if (points.length === 0) return alert("No hay puntos registrados");
+      const features = points.filter(p => p.lat !== "N/A").map(p => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [parseFloat(p.lon), parseFloat(p.lat)]
+        },
+        properties: {
+          punto: p.id,
+          azimut_verdadero: parseFloat(p.azTrue),
+          rumbo: p.bearing,
+          inclinacion: parseFloat(p.pitch),
+          fecha: p.timestamp
+        }
+      }));
+
+      const geojson = {
+        type: "FeatureCollection",
+        features: features
+      };
+
+      const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `lev_topografico_${Date.now()}.geojson`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
 
     startBtn.addEventListener('click', startSensors);
   </script>
