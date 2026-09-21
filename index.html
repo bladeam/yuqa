@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberHub | Portal de Herramientas & Módulos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            black: '#05070f',
+                            dark: '#0c101d',
+                            panel: 'rgba(15, 23, 42, 0.75)',
+                            cyan: '#00f0ff',
+                            purple: '#7000ff',
+                            magenta: '#ff007f',
+                            gold: '#ffb703',
+                            green: '#00ff66'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #05070f;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(112, 0, 255, 0.08) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Neon Glow Effects */
+        .neon-border-cyan {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.1);
+        }
+        
+        .neon-text-cyan {
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+        }
+
+        .neon-text-gold {
+            text-shadow: 0 0 8px rgba(255, 183, 3, 0.6);
+        }
+
+        .cyber-card {
+            background: rgba(12, 16, 29, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .cyber-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            border-color: rgba(0, 240, 255, 0.6);
+            box-shadow: 0 10px 30px -5px rgba(0, 240, 255, 0.25), 0 0 15px rgba(112, 0, 255, 0.2);
+        }
+
+        .cyber-btn {
+            position: relative;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.2s ease;
+        }
+
+        .cyber-btn:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        /* Scanline Overlay Effect */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.3));
+            background-size: 100% 4px;
+            z-index: 50;
+            opacity: 0.25;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #05070f; }
+        ::-webkit-scrollbar-thumb { background: #00f0ff; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Scanline Effect Overlay -->
+    <div class="scanline"></div>
+
+    <div class="container mx-auto px-4 py-6 max-w-7xl relative z-10">
+
+        <!-- Header -->
+        <header class="mb-8 border-b border-cyber-cyan/20 pb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-cyber-black border border-cyber-cyan/50 flex items-center justify-center rounded-lg shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                            <i class="fa-solid fa-terminal text-2xl text-cyber-cyan"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-orbitron font-black text-2xl md:text-3xl tracking-wider text-white flex items-center gap-2">
+                                CYBER<span class="text-cyber-cyan neon-text-cyan">HUB</span>
+                                <span class="text-xs font-rajdhani px-2 py-0.5 rounded border border-cyber-gold/40 text-cyber-gold bg-cyber-gold/10">v2.026</span>
+                            </h1>
+                            <p class="text-slate-400 text-sm font-medium">Panel Interactivo de Herramientas, Lingüística & Módulos Web</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Terminal Info -->
+                <div class="flex items-center gap-3 text-xs font-mono bg-cyber-dark/80 p-3 rounded-lg border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyber-green animate-ping"></span>
+                        <span class="text-cyber-green font-semibold">ONLINE</span>
+                    </div>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-400"><i class="fa-solid fa-hard-drive text-cyber-cyan mr-1"></i> Local Repository</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div class="cyber-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-cyber-cyan">
+                    <div>
+                        <div class="text-xs uppercase font-orbitron text-slate-400">Total Módulos</div>
+                        <div class="text-2xl font-orbitron font-bold text-white mt-1" id="stat-total">18</div>
+                    </div>
+                    <i class="fa-solid fa-cubes text-2xl text-cyber-cyan/60"></i>
+                </div>
+
+                <div class="cyber-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-cyber-purple">
+                    <div>
+                        <div class="text-xs uppercase font-orbitron text-slate-400">Lingüística</div>
+                        <div class="text-2xl font-orbitron font-bold text-white mt-1" id="stat-lang">6</div>
+                    </div>
+                    <i class="fa-solid fa-language text-2xl text-cyber-purple/60"></i>
+                </div>
+
+                <div class="cyber-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-cyber-magenta">
+                    <div>
+                        <div class="text-xs uppercase font-orbitron text-slate-400">Audio & PDF</div>
+                        <div class="text-2xl font-orbitron font-bold text-white mt-1" id="stat-pdf">6</div>
+                    </div>
+                    <i class="fa-solid fa-file-pdf text-2xl text-cyber-magenta/60"></i>
+                </div>
+
+                <div class="cyber-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-cyber-gold">
+                    <div>
+                        <div class="text-xs uppercase font-orbitron text-slate-400">Ciencias & Util</div>
+                        <div class="text-2xl font-orbitron font-bold text-white mt-1" id="stat-science">6</div>
+                    </div>
+                    <i class="fa-solid fa-microchip text-2xl text-cyber-gold/60"></i>
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-8 space-y-4">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                
+                <!-- Category Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-none" id="categoryContainer">
+                    <!-- Dynamic categories injected here -->
+                </div>
+
+                <!-- Search and Layout Toggle -->
+                <div class="flex items-center gap-3">
+                    <div class="relative flex-1 sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-cyber-cyan/70 text-sm"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar módulo o palabra clave..." 
+                               class="w-full pl-10 pr-9 py-2 rounded-lg bg-cyber-dark/90 border border-cyber-cyan/30 text-white placeholder-slate-500 text-sm font-rajdhani font-semibold focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all">
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- View Toggle -->
+                    <div class="flex items-center bg-cyber-dark p-1 rounded-lg border border-slate-800 shrink-0">
+                        <button id="btnGrid" onclick="setViewMode('grid')" class="px-3 py-1.5 rounded text-xs font-orbitron bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition-all">
+                            <i class="fa-solid fa-border-all"></i>
+                        </button>
+                        <button id="btnList" onclick="setViewMode('list')" class="px-3 py-1.5 rounded text-xs font-orbitron text-slate-400 hover:text-white transition-all">
+                            <i class="fa-solid fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <main>
+            <!-- Grid Mode -->
+            <div id="gridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- List Mode -->
+            <div id="listContainer" class="hidden space-y-3">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20 cyber-card rounded-xl">
+                <i class="fa-solid fa-radar text-4xl text-cyber-cyan/40 mb-3 animate-pulse"></i>
+                <h3 class="font-orbitron text-lg font-bold text-white">Sin Coincidencias</h3>
+                <p class="text-slate-400 text-sm mt-1">No se encontraron archivos con ese término de búsqueda.</p>
+                <button onclick="clearSearch()" class="mt-4 px-4 py-2 cyber-btn bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/50 text-xs font-orbitron uppercase">
+                    Restablecer Filtros
+                </button>
+            </div>
+        </main>
+
+        <footer class="mt-16 pt-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+                <span class="font-orbitron text-slate-400">CyberHub System</span> — 18 Módulos Cargados Correctamente
+            </div>
+            <div class="flex items-center gap-4 text-slate-400">
+                <span class="hover:text-cyber-cyan transition-colors cursor-pointer"><i class="fa-solid fa-code"></i> HTML5/JS Self-Contained</span>
+                <span>•</span>
+                <span class="hover:text-cyber-cyan transition-colors cursor-pointer"><i class="fa-solid fa-shield-halved"></i> UTF-8 Ready</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // Datasets definition
+        const filesList = [
+            {
+                filename: "aymara_concurso_deletreo_v4.html",
+                title: "Concurso Deletreo Aymara",
+                desc: "Juego educativo e interactivo de deletreo y pronunciación en idioma Aymara v4.",
+                category: "Linguística y Quechua/Aymara",
+                tags: ["Aymara", "Juego", "Deletreo"],
+                status: "1 mes atrás",
+                icon: "fa-solid fa-spell-check",
+                color: "cyber-purple"
+            },
+            {
+                filename: "brujula.html",
+                title: "Brújula Digital Sensor",
+                desc: "Herramienta orientativa en tiempo real utilizando sensores de orientación/magnetómetro.",
+                category: "Utilidades y Sensores",
+                tags: ["Sensor", "Orientación", "GPS"],
+                status: "hace 2 semanas",
+                icon: "fa-solid fa-compass",
+                color: "cyber-cyan"
+            },
+            {
+                filename: "clasificacion_matrices.html",
+                title: "Clasificación de Matrices",
+                desc: "Módulo educativo e interactivo para resolución y clasificación de matrices algebraicas.",
+                category: "Matemática y Ciencias",
+                tags: ["Álgebra", "Matrices", "Math"],
+                status: "1 mes atrás",
+                icon: "fa-solid fa-table-cells",
+                color: "cyber-gold"
+            },
+            {
+                filename: "cuadro_nawpa_kunan_quipa.html",
+                title: "Cuadro Ñawpa Kunan Qhipa",
+                desc: "Tabla y guía gramatical interactiva de tiempos verbales en Quechua (Pasado, Presente, Futuro).",
+                category: "Linguística y Quechua/Aymara",
+                tags: ["Quechua", "Gramática", "Tiempos"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-hourglass-half",
+                color: "cyber-purple"
+            },
+            {
+                filename: "cuestionario_conjugacion_pasado_perfecto.html",
+                title: "Quiz Conjugación Pasado Perfecto",
+                desc: "Cuestionario dinámico de evaluación sobre conjugación verbal en pasado perfecto Quechua.",
+                category: "Linguística y Quechua/Aymara",
+                tags: ["Quechua", "Quiz", "Pasado Perfecto"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-list-check",
+                color: "cyber-purple"
+            },
+            {
+                filename: "cuestionario_logica.html",
+                title: "Cuestionario de Lógica",
+                desc: "Evaluador interactivo con problemas de lógica proposicional, tablas de verdad y acertijos.",
+                category: "Matemática y Ciencias",
+                tags: ["Lógica", "Quiz", "Razonamiento"],
+                status: "1 mes atrás",
+                icon: "fa-solid fa-brain",
+                color: "cyber-gold"
+            },
+            {
+                filename: "dictado_con_voz.html",
+                title: "Dictado por Voz Quechua",
+                desc: "Herramienta de reconocimiento de voz y dictado automático adaptado para frases en Quechua.",
+                category: "Linguística y Quechua/Aymara",
+                tags: ["Voz", "Quechua", "Speech-to-Text"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-microphone-lines",
+                color: "cyber-purple"
+            },
+            {
+                filename: "fotos_a_pdf.html",
+                title: "Convertidor Fotos a PDF",
+                desc: "Utilidad cliente para empaquetar, ordenar y convertir imágenes/fotos en documentos PDF.",
+                category: "Herramientas PDF & Audio",
+                tags: ["PDF", "Imágenes", "Conversor"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-file-image",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "gps_l1.html",
+                title: "Herramienta GPS L1 & Geodesia",
+                desc: "Calculadora y visualizador de señales satelitales GPS L1 para topografía y geodesia.",
+                category: "Utilidades y Sensores",
+                tags: ["GPS", "Topografía", "Geodesia"],
+                status: "hace 2 semanas",
+                icon: "fa-solid fa-location-crosshairs",
+                color: "cyber-cyan"
+            },
+            {
+                filename: "llamar_assitencia.html",
+                title: "Registro de Asistencia",
+                desc: "Módulo de control, llamado y registro rápido de asistencia con generador de listas.",
+                category: "Utilidades y Sensores",
+                tags: ["Asistencia", "Control", "Lista"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-clipboard-user",
+                color: "cyber-cyan"
+            },
+            {
+                filename: "pdf_a_audio_v3.html",
+                title: "PDF a Audio Converter v3",
+                desc: "Lector avanzado de documentos PDF a audio sintetizado con controles de reproducción.",
+                category: "Herramientas PDF & Audio",
+                tags: ["PDF", "Audio", "TTS v3"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-file-audio",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "pdf_a_mp3.html",
+                title: "PDF a MP3 Standard",
+                desc: "Módulo de extracción de texto desde PDF y conversión directa a archivos descargables MP3.",
+                category: "Herramientas PDF & Audio",
+                tags: ["PDF", "MP3", "Audio"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-music",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "pdf_a_mp3_v2.html",
+                title: "PDF a MP3 Converter v2",
+                desc: "Segunda versión optimizada con mayor velocidad de procesamiento y ajuste de voces.",
+                category: "Herramientas PDF & Audio",
+                tags: ["PDF", "MP3 v2", "Voz"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-file-waveform",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "sorteo_verbos_pas_perf.html",
+                title: "Sorteo Verbos Pasado Perfecto",
+                desc: "Ruleta/Sorteador aleatorio de verbos en Quechua para prácticas dinámicas de clase.",
+                category: "Linguística y Quechua/Aymara",
+                tags: ["Quechua", "Juego", "Sorteo"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-dice",
+                color: "cyber-purple"
+            },
+            {
+                filename: "texto_a_voz_v2.html",
+                title: "Sintetizador Texto a Voz v2",
+                desc: "Motor cliente de sintesis de voz (TTS) personalizable con acentos y ajuste de velocidad.",
+                category: "Herramientas PDF & Audio",
+                tags: ["TTS", "Voz", "Audio"],
+                status: "hace 2 semanas",
+                icon: "fa-solid fa-volume-high",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "unir_pdfs.html",
+                title: "Unidor / Merger de PDFs",
+                desc: "Herramienta rápida para combinar múltiples archivos PDF en un único documento sin servidor.",
+                category: "Herramientas PDF & Audio",
+                tags: ["PDF", "Merge", "Utilidad"],
+                status: "hace 3 semanas",
+                icon: "fa-solid fa-object-group",
+                color: "cyber-magenta"
+            },
+            {
+                filename: "variables_estadistica_juego.html",
+                title: "Juego Variables Estadísticas",
+                desc: "Simulador gamificado para aprender a clasificar variables cualitativas y cuantitativas.",
+                category: "Matemática y Ciencias",
+                tags: ["Estadística", "Juego", "Math"],
+                status: "1 mes atrás",
+                icon: "fa-solid fa-chart-pie",
+                color: "cyber-gold"
+            },
+            {
+                filename: "yupaq.html",
+                title: "Yupaq - Matemática Quechua",
+                desc: "Contador y calculadora didáctica basada en el sistema numérico y Yupana en Quechua.",
+                category: "Matemática y Ciencias",
+                tags: ["Quechua", "Yupana", "Números"],
+                status: "hace 2 semanas",
+                icon: "fa-solid fa-calculator",
+                color: "cyber-gold"
+            }
+        ];
+
+        const CATEGORIES = [
+            "Todos",
+            "Linguística y Quechua/Aymara",
+            "Herramientas PDF & Audio",
+            "Matemática y Ciencias",
+            "Utilidades y Sensores"
+        ];
+
+        // State
+        let activeCategory = "Todos";
+        let searchQuery = "";
+        let viewMode = "grid";
+
+        // DOM Elements
+        const gridContainer = document.getElementById("gridContainer");
+        const listContainer = document.getElementById("listContainer");
+        const emptyState = document.getElementById("emptyState");
+        const categoryContainer = document.getElementById("categoryContainer");
+        const searchInput = document.getElementById("searchInput");
+        const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+        function renderCategories() {
+            categoryContainer.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat === activeCategory;
+                const count = cat === "Todos" ? filesList.length : filesList.filter(f => f.category === cat).length;
+                
+                return `
+                    <button onclick="setCategory('${cat}')" 
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-orbitron font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                            isActive 
+                            ? 'bg-cyber-cyan text-cyber-black shadow-[0_0_15px_rgba(0,240,255,0.4)] font-bold' 
+                            : 'bg-cyber-dark/80 text-slate-400 hover:text-white border border-slate-800'
+                        }">
+                        <span>${cat}</span>
+                        <span class="px-1.5 py-0.2 text-[10px] rounded ${isActive ? 'bg-cyber-black/30 text-cyber-black' : 'bg-slate-800 text-slate-400'}">${count}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Color mapper helper
+        function getColorClasses(colorName) {
+            switch(colorName) {
+                case 'cyber-purple':
+                    return { text: 'text-cyber-purple', border: 'border-cyber-purple/40', bg: 'bg-cyber-purple/10', glow: 'shadow-cyber-purple/20' };
+                case 'cyber-magenta':
+                    return { text: 'text-cyber-magenta', border: 'border-cyber-magenta/40', bg: 'bg-cyber-magenta/10', glow: 'shadow-cyber-magenta/20' };
+                case 'cyber-gold':
+                    return { text: 'text-cyber-gold', border: 'border-cyber-gold/40', bg: 'bg-cyber-gold/10', glow: 'shadow-cyber-gold/20' };
+                default:
+                    return { text: 'text-cyber-cyan', border: 'border-cyber-cyan/40', bg: 'bg-cyber-cyan/10', glow: 'shadow-cyber-cyan/20' };
+            }
+        }
+
+        function renderModules() {
+            const filtered = filesList.filter(item => {
+                const matchesCat = activeCategory === "Todos" || item.category === activeCategory;
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                gridContainer.classList.add("hidden");
+                listContainer.classList.add("hidden");
+                emptyState.classList.remove("hidden");
+                return;
+            }
+
+            emptyState.classList.add("hidden");
+
+            // Render Grid
+            gridContainer.innerHTML = filtered.map(item => {
+                const colors = getColorClasses(item.color);
+                
+                return `
+                    <div class="cyber-card p-5 flex flex-col justify-between group relative">
+                        <div>
+                            <!-- Header status & badge -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-[10px] font-orbitron px-2 py-0.5 rounded ${colors.bg} ${colors.text} border ${colors.border}">
+                                    ${item.category}
+                                </span>
+                                <span class="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                                    <i class="fa-regular fa-clock text-[10px]"></i> ${item.status}
+                                </span>
+                            </div>
+
+                            <!-- Title & Icon -->
+                            <div class="flex items-start gap-3 my-2">
+                                <div class="w-10 h-10 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center ${colors.text} shrink-0 text-lg group-hover:scale-110 transition-transform">
+                                    <i class="${item.icon}"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-orbitron font-bold text-white text-base group-hover:${colors.text} transition-colors line-clamp-1">
+                                        ${item.title}
+                                    </h3>
+                                    <p class="text-xs text-slate-400 font-mono mt-0.5">${item.filename}</p>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-300 mt-2 line-clamp-2 leading-relaxed">
+                                ${item.desc}
+                            </p>
+                        </div>
+
+                        <div>
+                            <!-- Tags -->
+                            <div class="flex flex-wrap gap-1.5 my-4">
+                                ${item.tags.map(t => `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-900/90 text-slate-400 border border-slate-800">#${t}</span>`).join('')}
+                            </div>
+
+                            <!-- Launch Button -->
+                            <a href="${item.filename}" target="_blank" 
+                               class="cyber-btn w-full py-2 px-4 bg-cyber-dark hover:bg-cyber-cyan hover:text-cyber-black text-cyber-cyan border border-cyber-cyan/40 font-orbitron font-bold text-xs uppercase flex items-center justify-center gap-2 transition-all">
+                                <span>Ejecutar Módulo</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render List
+            listContainer.innerHTML = filtered.map(item => {
+                const colors = getColorClasses(item.color);
+
+                return `
+                    <div class="cyber-card p-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center ${colors.text} text-lg shrink-0">
+                                <i class="${item.icon}"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-orbitron font-bold text-white text-sm group-hover:${colors.text} transition-colors truncate">
+                                        ${item.title}
+                                    </h3>
+                                    <span class="text-[10px] font-mono text-slate-500">(${item.filename})</span>
+                                </div>
+                                <p class="text-xs text-slate-400 truncate mt-0.5">${item.desc}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end shrink-0">
+                            <span class="text-[11px] text-slate-500 font-mono hidden lg:inline">${item.status}</span>
+                            <a href="${item.filename}" target="_blank" 
+                               class="cyber-btn py-1.5 px-4 bg-cyber-dark hover:bg-cyber-cyan hover:text-cyber-black text-cyber-cyan border border-cyber-cyan/40 font-orbitron font-bold text-xs uppercase flex items-center gap-1.5 transition-all">
+                                <span>Lanzar</span>
+                                <i class="fa-solid fa-play text-[9px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (viewMode === 'grid') {
+                gridContainer.classList.remove("hidden");
+                listContainer.classList.add("hidden");
+            } else {
+                gridContainer.classList.add("hidden");
+                listContainer.classList.remove("hidden");
+            }
+        }
+
+        // Interactions
+        function setCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderModules();
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            const btnGrid = document.getElementById("btnGrid");
+            const btnList = document.getElementById("btnList");
+
+            if (mode === 'grid') {
+                btnGrid.className = "px-3 py-1.5 rounded text-xs font-orbitron bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition-all";
+                btnList.className = "px-3 py-1.5 rounded text-xs font-orbitron text-slate-400 hover:text-white transition-all";
+            } else {
+                btnList.className = "px-3 py-1.5 rounded text-xs font-orbitron bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition-all";
+                btnGrid.className = "px-3 py-1.5 rounded text-xs font-orbitron text-slate-400 hover:text-white transition-all";
+            }
+            renderModules();
+        }
+
+        searchInput.addEventListener("input", (e) => {
+            searchQuery = e.target.value.trim();
+            clearSearchBtn.classList.toggle("hidden", searchQuery === "");
+            renderModules();
+        });
+
+        function clearSearch() {
+            searchInput.value = "";
+            searchQuery = "";
+            activeCategory = "Todos";
+            clearSearchBtn.classList.add("hidden");
+            renderCategories();
+            renderModules();
+        }
+
+        // Initial launch
+        window.addEventListener("DOMContentLoaded", () => {
+            renderCategories();
+            renderModules();
+        });
+    </script>
+</body>
+</html>
