@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Quiz: Introducción a Bases de Datos</title>
+    <!-- Tailwind CSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(51, 65, 85, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.5);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 min-h-screen">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-brand-500/20 text-brand-500 rounded-xl border border-brand-500/30">
+                    <i class="fa-solid fa-database text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-brand-500 to-indigo-400 bg-clip-text text-transparent">DB Quest</h1>
+                    <p class="text-xs text-slate-400">Plataforma Interactiva de Bases de Datos</p>
+                </div>
+            </div>
+            <div id="quizHeaderStats" class="hidden flex items-center gap-4 text-sm font-medium">
+                <div class="bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-brand-500"></i>
+                    <span id="timerDisplay">00:00</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-solid fa-user text-indigo-400"></i>
+                    <span id="userBadge">Invitado</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+        <section id="setupScreen" class="space-y-6">
+            <div class="text-center space-y-2 max-w-2xl mx-auto">
+                <span class="px-3 py-1 bg-brand-500/10 text-brand-500 text-xs font-semibold rounded-full border border-brand-500/20 uppercase tracking-wider">
+                    Nivel Básico Completo (40 Preguntas)
+                </span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Cuestionario de Bases de Datos</h2>
+                <p class="text-slate-400 text-sm md:text-base">Ponte a prueba en Introducción, Historia, DBMS, SQL y Álgebra Relacional.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start max-w-5xl mx-auto">
+                <!-- Formulario de Configuración -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 space-y-5 shadow-2xl border border-slate-800">
+                    <h3 class="text-lg font-bold text-slate-200 border-b border-slate-700/60 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-brand-500"></i> Configurar Sesión
+                    </h3>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Nombre del Participante</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+                            <input type="text" id="participantName" placeholder="Escribe tu nombre..." 
+                                class="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-sm font-medium text-slate-300">Número de Preguntas</label>
+                            <span id="questionCountDisplay" class="text-sm font-bold text-brand-500 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">40</span>
+                        </div>
+                        <input type="range" id="questionCount" min="1" max="40" value="40" 
+                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>1 Min</span>
+                            <span>20 Med</span>
+                            <span>40 Máx</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1.5">Filtrar por Tema</label>
+                        <select id="categoryFilter" class="w-full bg-slate-950/60 border border-slate-700/80 rounded-xl py-2.5 px-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition text-sm">
+                            <option value="ALL">Todos los temas (Mezclado)</option>
+                            <option value="INTRO">1. Introducción a Bases de Datos</option>
+                            <option value="HIST">2. Historia de las BD</option>
+                            <option value="DBMS">3. DBMS / SGBD</option>
+                            <option value="SQL">4. SQL Básico</option>
+                            <option value="REL">5. Álgebra Relacional</option>
+                        </select>
+                    </div>
+
+                    <button id="startBtn" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2 group">
+                        <span>Iniciar Cuestionario</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+
+                <!-- Historial de Intentos -->
+                <div class="lg:col-span-6 glass-panel rounded-2xl p-6 space-y-4 shadow-2xl border border-slate-800 flex flex-col max-h-[460px]">
+                    <div class="flex justify-between items-center border-b border-slate-700/60 pb-3">
+                        <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Historial de Intentos
+                        </h3>
+                        <button id="clearHistoryBtn" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 transition">
+                            <i class="fa-solid fa-trash-can"></i> Limpiar
+                        </button>
+                    </div>
+
+                    <div id="historyList" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
+                        <!-- Se llena dinámicamente -->
+                        <p class="text-center text-slate-500 py-8 text-sm">No hay intentos registrados aún.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="quizScreen" class="hidden space-y-6 max-w-3xl mx-auto w-full">
+            <!-- Barra de Progreso Superior -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-400">
+                    <span id="progressText">Pregunta 1 de 40</span>
+                    <span id="categoryBadge" class="bg-indigo-500/10 text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-500/20">Categoría</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+                    <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-indigo-500 h-2.5 rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Pregunta -->
+            <div class="glass-panel rounded-2xl p-6 md:p-8 space-y-6 border border-slate-800 shadow-2xl">
+                <h3 id="questionText" class="text-lg md:text-xl font-semibold text-slate-100 leading-relaxed">
+                    Cargando pregunta...
+                </h3>
+
+                <div id="optionsContainer" class="space-y-3">
+                    <!-- Opciones generadas mediante JS -->
+                </div>
+
+                <!-- Retroalimentación / Explicación -->
+                <div id="feedbackContainer" class="hidden p-4 rounded-xl border text-sm space-y-1 animate-fade-in">
+                    <div id="feedbackTitle" class="font-bold flex items-center gap-2"></div>
+                    <p id="feedbackText" class="text-slate-300"></p>
+                </div>
+            </div>
+
+            <!-- Botones de Navegación -->
+            <div class="flex justify-between items-center gap-4">
+                <button id="prevBtn" class="py-2.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700/60 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Anterior
+                </button>
+                <button id="nextBtn" class="py-2.5 px-6 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center gap-2">
+                    <span>Siguiente</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="resultsScreen" class="hidden space-y-6 max-w-4xl mx-auto w-full">
+            <div class="glass-panel rounded-2xl p-6 md:p-8 space-y-6 border border-slate-800 text-center relative overflow-hidden">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resultado Final</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-white">¡Cuestionario Completado!</h2>
+                    <p id="resultUserText" class="text-slate-300 text-sm">Participante: <span class="font-bold text-brand-400">Usuario</span></p>
+                </div>
+
+                <!-- Gráfico de Porcentaje y Nota -->
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 py-4 border-y border-slate-800">
+                    <div class="relative w-36 h-36 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="scoreCircle" class="text-brand-500" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span id="scorePercent" class="text-3xl font-extrabold text-white">0%</span>
+                            <span id="scoreBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">ESTADO</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
+                        <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                            <div class="text-xs text-emerald-400 font-medium">Correctas</div>
+                            <div id="statCorrect" class="text-xl font-extrabold text-emerald-400 mt-0.5">0</div>
+                        </div>
+                        <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-center">
+                            <div class="text-xs text-rose-400 font-medium">Incorrectas</div>
+                            <div id="statIncorrect" class="text-xl font-extrabold text-rose-400 mt-0.5">0</div>
+                        </div>
+                        <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+                            <div class="text-xs text-amber-400 font-medium">Omitidas</div>
+                            <div id="statOmitted" class="text-xl font-extrabold text-amber-400 mt-0.5">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button id="retryBtn" class="py-2.5 px-6 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Volver a Intentar
+                    </button>
+                    <button id="homeBtn" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl border border-slate-700/60 transition flex items-center gap-2">
+                        <i class="fa-solid fa-house"></i> Ir al Inicio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Desglose de Respuestas -->
+            <div class="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-700/60 pb-3">
+                    <i class="fa-solid fa-list-check text-brand-500"></i> Desglose Detallado de Preguntas
+                </h3>
+                <div id="reviewList" class="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                    <!-- Respuestas detalladas se insertan por JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // BANCO COMPLETO DE 40 PREGUNTAS (Nivel Básico)
+        const QUESTION_BANK = [
+            // --- Categoría 1: Introducción a Bases de Datos (1-8) ---
+            {
+                id: 1,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Cuál es la principal diferencia entre 'Datos' e 'Información'?",
+                options: [
+                    "Los datos son información procesada y estructurada",
+                    "Los datos son hechos crudos sin procesar, mientras que la información son datos procesados con significado",
+                    "No existe ninguna diferencia, son términos idénticos en informática",
+                    "La información se almacena en disco y los datos en la memoria RAM"
+                ],
+                correct: 1,
+                explanation: "Los datos son símbolos o hechos en bruto sin contexto. Al ser procesados y organizados para otorgarles significado, se convierten en información."
+            },
+            {
+                id: 2,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Qué es una Base de Datos?",
+                options: [
+                    "Un programa para editar hojas de cálculo rápidamente",
+                    "Un conjunto estructurado de datos almacenados de forma sistemática para su posterior uso",
+                    "Un componente físico dentro de la memoria caché del procesador",
+                    "Un lenguaje de programación utilizado exclusivamente para diseñar páginas web"
+                ],
+                correct: 1,
+                explanation: "Una base de datos es una colección organizada y estructurada de datos almacenados electrónicamente para facilitar su acceso y gestión."
+            },
+            {
+                id: 3,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Cuál es una ventaja clave de usar una Base de Datos frente a archivos tradicionales de texto/hojas de cálculo?",
+                options: [
+                    "Eliminación total de la necesidad de hacer copias de seguridad",
+                    "Reducción de la redundancia e inconsistencia de los datos",
+                    "Que no requiere hardware informático para ejecutarse",
+                    "Que solo puede ser accedida por un único usuario a la vez"
+                ],
+                correct: 1,
+                explanation: "Las bases de datos centralizan la información, lo que reduce la duplicación de datos (redundancia) y minimiza errores de incoherencia (inconsistencia)."
+            },
+            {
+                id: 4,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Una empresa que ofrece de servicios en la nube?",
+                options: [
+                    "DBMS",
+                    "AWS",
+                    "SQL",
+                    "Facebook"
+                ],
+                correct: 1,
+                explanation: "AWS(Amazon Web Services)."
+            },
+            {
+        id: 5,
+        category: "INTRO",
+        categoryName: "Introducción a BD",
+        question: "¿Qué tipo de lenguaje se utiliza para definir o modificar el esquema de la base de datos (crear tablas, alterar columnas, definir claves)?",
+        options: [
+            "DDL (Data Definition Language)",
+            "DML (Data Manipulation Language)",
+            "DCL (Data Control Language)",
+            "TCL (Transaction Control Language)"
+        ],
+        correct: 0,
+        explanation: "El DDL (Lenguaje de Definición de Datos) incluye instrucciones como CREATE, ALTER y DROP, utilizadas para especificar y modificar el esquema conceptual e interno."
+    },
+            {
+        id: 6,
+        category: "INTRO",
+        categoryName: "Introducción a BD",
+        question: "¿Qué problema ocurre cuando el mismo dato está almacenado en múltiples lugares sin sincronización automática y una actualización no se aplica en todos ellos?",
+        options: [
+            "Inconsistencia de Datos",
+            "Incompatibilidad de hardware",
+            "Falta de aislamiento físico",
+            "Pérdida de independencia lógica"
+        ],
+        correct: 0,
+        explanation: "La redundancia no controlada suele derivar en inconsistencia de datos, donde copias del mismo dato muestran valores contradictorios."
+    },
+            {
+                id: 7,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Qué es la 'Concurrencia' en una Base de Datos?",
+                options: [
+                    "La capacidad de que múltiples usuarios accedan y modifiquen la BD simultáneamente sin conflictos",
+                    "Ejecutar consultas SQL exactamente a la misma hora todos los días",
+                    "Guardar la misma base de datos en dos servidores diferentes",
+                    "Convertir datos de texto a formato binario"
+                ],
+                correct: 0,
+                explanation: "El control de concurrencia permite a varios usuarios o procesos interactuar con la base de datos al mismo tiempo manteniendo la consistencia de los datos."
+            },
+            {
+                id: 8,
+                category: "INTRO",
+                categoryName: "Introducción a BD",
+                question: "¿Cuál de los siguientes es un usuario típico responsable del mantenimiento, rendimiento y seguridad de una BD?",
+                options: [
+                    "Usuario Final",
+                    "Diseñador Gráfico",
+                    "Administrador de Base de Datos (DBA)",
+                    "Desarrollador Frontend"
+                ],
+                correct: 2,
+                explanation: "El DBA (Database Administrator) es el profesional encargado de supervisar, asegurar y mantener el correcto funcionamiento del DBMS."
+            },
+
+            // --- Categoría 2: Historia de las BD (9-16) ---
+            {
+                id: 9,
+                category: "HIST",
+                categoryName: "Historia de las BD",
+                question: "Antes de los Sistemas de Gestión de Bases de Datos, ¿cómo se gestionaba la información digital?",
+                options: [
+                    "Con modelos orientados a objetos",
+                    "Mediante Sistemas de Archivos tradicionales (archivos planos independientes)",
+                    "Con bases de datos NoSQL basadas en documentos",
+                    "Mediante motores de búsqueda basados en Inteligencia Artificial"
+                ],
+                correct: 1,
+                explanation: "En los inicios de la informática, los datos se almacenaban en archivos planos individuales gestionados por el sistema operativo, lo que generaba alto desorden y redundancia."
+            },
+            {
+        id: 10,
+        category: "INTRO",
+        categoryName: "Introducción a BD",
+        question: "¿En un modelo relacional, cómo se le conoce comúnmente a una fila dentro de una tabla?",
+        options: [
+            "Registro (o Tupla)",
+            "Campo (o Columna)",
+            "Atributo",
+            "Dato primario"
+        ],
+        correct: 0,
+        explanation: "En las bases de datos relacionales, cada fila representa un 'registro' individual (también llamado tupla en la teoría relacional)."
+    },
+            {
+        id: 11,
+        category: "INTRO",
+        categoryName: "Introducción a BD",
+        question: "¿En un modelo relacional, cómo se le conoce a una columna dentro de una tabla?",
+        options: [
+            "Campo (o Atributo)",
+            "Fila",
+            "Registro",
+            "Clave ajena"
+        ],
+        correct: 0,
+        explanation: "Las columnas definen las características de los datos almacenados (por ejemplo: Nombre, Edad, Correo) y se les conoce como campos o atributos."
+    },
+            {
+                id: 12,
+                category: "HIST",
+                categoryName: "Historia de las BD",
+                question: "¿En qué década se propuso formalmente el Modelo Relacional?",
+                options: [
+                    "Década de 1950",
+                    "Década de 1970",
+                    "Década de 1990",
+                    "Década de 2010"
+                ],
+                correct: 1,
+                explanation: "E. F. Codd publicó su célebre trabajo 'A Relational Model of Data for Large Shared Data Banks' en junio de 1970."
+            },
+           {
+        id: 13,
+        category: "INTRO",
+        categoryName: "Introducción a BD",
+        question: "¿Cuál es la función principal de una Clave Primaria (Primary Key)?",
+        options: [
+            "Identificar de forma única cada registro dentro de una tabla",
+            "Encriptar la contraseña de los usuarios",
+            "Conectar el servidor a internet",
+            "Sumar automáticamente los valores numéricos de una columna"
+        ],
+        correct: 0,
+        explanation: "La clave primaria es un campo (o conjunto de campos) que garantiza que no existan dos registros idénticos en una misma tabla."
+    },
+            {
+                id: 14,
+                category: "HIST",
+                categoryName: "Historia de las BD",
+                question: "¿Cuál fue el lenguaje de consulta precursor que dio origen al SQL moderno desarrollado por IBM?",
+                options: [
+                    "SEQUEL (Structured English Query Language)",
+                    "QUEL",
+                    "DBQuery",
+                    "GraphQL"
+                ],
+                correct: 0,
+                explanation: "SEQUEL fue desarrollado en IBM por Donald D. Chamberlin y Raymond F. Boyce en los 70, que luego evolucionó al acrónimo SQL."
+            },
+            {
+                id: 15,
+                category: "HIST",
+                categoryName: "Historia de las BD",
+                question: "¿Qué movimiento o tecnología cobró gran fuerza a finales de los 2000 para manejar Big Data y datos no estructurados?",
+                options: [
+                    "Movimiento NoSQL / Not Only SQL",
+                    "Sistemas Jerárquicos de 2ª Generación",
+                    "Bases de Datos en Cintas Magnéticas",
+                    "Tablas de Verdad Lógicas"
+                ],
+                correct: 0,
+                explanation: "NoSQL surgió para abordar las necesidades de escalabilidad masiva y manejo de datos no estructurados/semiestructurados en la era web 2.0."
+            },
+            {
+                id: 16,
+                category: "HIST",
+                categoryName: "Historia de las BD",
+                question: "¿Qué caracteriza al modelo de bases de datos Orientado a Objetos (BDOO)?",
+                options: [
+                    "Almacena datos únicamente en archivos CSV",
+                    "Integra los conceptos de la programación orientada a objetos (clases, herencia, métodos) directamente en la BD",
+                    "Prohíbe el uso de claves primarias y foráneas",
+                    "Solo se utiliza en sistemas operativos analógicos"
+                ],
+                correct: 1,
+                explanation: "El modelo OODBMS permite almacenar objetos complejos manteniendo conceptos de POO como herencia, encapsulamiento y polimorfismo."
+            },
+
+            // --- Categoría 3: DBMS / SGBD (17-24) ---
+            {
+                id: 17,
+                category: "DBMS",
+                categoryName: "DBMS / SGBD",
+                question: "¿Qué significan las siglas DBMS o SGBD?",
+                options: [
+                    "Database Management System / Sistema de Gestión de Bases de Datos",
+                    "Digital Backup Memory Software / Sistema de Grabación de Datos",
+                    "Data Block Main Server / Servidor de Gestión de Búferes",
+                    "Direct Binary Memory Structure / Estructura de Memoria Directa"
+                ],
+                correct: 0,
+                explanation: "DBMS son las siglas en inglés para 'Database Management System' (Sistema de Gestión de Bases de Datos)."
+            },
+            {
+                id: 18,
+                category: "DBMS",
+                categoryName: "DBMS / SGBD",
+                question: "¿Cuál es el rol principal de un DBMS?",
+                options: [
+                    "Diseñar la interfaz de usuario de aplicaciones móviles",
+                    "Servir como intermediario entre los usuarios/aplicaciones y la base de datos física",
+                    "Fabricar discos duros de alta velocidad",
+                    "Traducir páginas web a diferentes idiomas"
+                ],
+                correct: 1,
+                explanation: "Un DBMS es el software que provee las herramientas para definir, crear, mantener y controlar el acceso a la base de datos de forma segura."
+            },
+            {
+                id: 19,
+                category: "DBMS",
+                categoryName: "DBMS / SGBD",
+                question: "¿Cuáles de los siguientes son ejemplos de DBMS Relacionales (RDBMS) ampliamente conocidos?",
+                options: [
+                    "Photoshop, Illustrator y Canva",
+                    "MySQL, PostgreSQL, Oracle y SQL Server",
+                    "Linux, Windows y macOS",
+                    "HTML, CSS y JavaScript"
+                ],
+                correct: 1,
+                explanation: "MySQL, PostgreSQL, Oracle Database y Microsoft SQL Server son motores RDBMS líderes en el mercado."
+            },
+            {
+        id: 20,
+        category: "DBMS",
+        categoryName: "DBMS",
+        question: "¿Cuál de los siguientes programas es un ejemplo de un Sistema de Gestión de Bases de Datos (DBMS)?",
+        options: [
+            "MySQL",
+            "Microsoft Word",
+            "Google Chrome",
+            "Adobe Photoshop"
+        ],
+        correct: 0,
+        explanation: "MySQL, PostgreSQL, Oracle, SQL Server y SQLite son ejemplos populares de motores o sistemas gestores de bases de datos."
+    },
+            {
+        id: 21,
+        category: "SQL",
+        categoryName: "SQL",
+        question: "¿Cuál es el comando básico de SQL utilizado para consultar o leer información almacenada en una tabla?",
+        options: [
+            "SELECT",
+            "INSERT",
+            "DELETE",
+            "UPDATE"
+        ],
+        correct: 0,
+        explanation: "El comando SELECT es la instrucción fundamental de SQL utilizada para buscar y recuperar registros de una o más tablas."
+    },
+            {
+        id: 22,
+        category: "SQL",
+        categoryName: "SQL",
+        question: "¿Qué comando SQL se utiliza para agregar un nuevo registro a una tabla?",
+        options: [
+            "INSERT INTO",
+            "ADD ROW",
+            "CREATE DATA",
+            "UPDATE"
+        ],
+        correct: 0,
+        explanation: "La sentencia INSERT INTO permite insertar nuevas filas de datos dentro de una tabla existente."
+    },
+            {
+                id: 23,
+                category: "DBMS",
+                categoryName: "DBMS / SGBD",
+                question: "¿Cuál de los siguientes es un motor de base de datos relacional ligero, empotrado y que no requiere un proceso servidor independiente?",
+                options: [
+                    "Oracle Enterprise",
+                    "SQLite",
+                    "Microsoft SQL Server Cluster",
+                    "IBM DB2 Server"
+                ],
+                correct: 1,
+                explanation: "SQLite es una biblioteca C que implementa un motor de BD SQL autónomo y sin servidor, ideal para dispositivos móviles y aplicaciones ligeras."
+            },
+            {
+                id: 24,
+                category: "DBMS",
+                categoryName: "DBMS / SGBD",
+                question: "¿Qué componente del DBMS se encarga de analizar, optimizar y planificar la ejecución de las consultas SQL?",
+                options: [
+                    "Gestor de Transacciones",
+                    "Optimizador de Consultas (Query Optimizer)",
+                    "Driver JDBC",
+                    "Búfer de Memoria RAM"
+                ],
+                correct: 1,
+                explanation: "El optimizador de consultas evalúa diferentes planes de ejecución para una sentencia SQL y elige la ruta más eficiente."
+            },
+
+            // --- Categoría 4: SQL Básico (25-32) ---
+            {
+                id: 25,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿Qué significan las siglas SQL?",
+                options: [
+                    "Sequential Query Language",
+                    "Structured Query Language",
+                    "System Quality Logic",
+                    "Simple Quick Lookup"
+                ],
+                correct: 1,
+                explanation: "SQL representa 'Structured Query Language' (Lenguaje de Consulta Estructurado)."
+            },
+            {
+                id: 26,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿A qué subgrupo de SQL pertenecen comandos como CREATE, ALTER y DROP?",
+                options: [
+                    "DML (Data Manipulation Language)",
+                    "DDL (Data Definition Language)",
+                    "DCL (Data Control Language)",
+                    "TCL (Transaction Control Language)"
+                ],
+                correct: 1,
+                explanation: "DDL (Lenguaje de Definición de Datos) se utiliza para definir o modificar las estructuras/esquemas de la base de datos."
+            },
+            {
+                id: 27,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿A qué subgrupo de SQL pertenecen comandos como INSERT, UPDATE y DELETE?",
+                options: [
+                    "DDL (Data Definition Language)",
+                    "DML (Data Manipulation Language)",
+                    "DCL (Data Control Language)",
+                    "DAL (Data Access Language)"
+                ],
+                correct: 1,
+                explanation: "DML (Lenguaje de Manipulación de Datos) permite modificar, agregar, eliminar y consultar los registros dentro de las tablas."
+            },
+            {
+                id: 28,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿Qué cláusula SQL se utiliza para filtrar las filas de una consulta según una condición dada?",
+                options: [
+                    "ORDER BY",
+                    "GROUP BY",
+                    "WHERE",
+                    "SELECT"
+                ],
+                correct: 2,
+                explanation: "La cláusula WHERE especifica las condiciones que deben cumplir las filas para ser seleccionadas o modificadas."
+            },
+            {
+                id: 29,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿Qué es una Clave Primaria (Primary Key)?",
+                options: [
+                    "Una clave que permite cifrar la base de datos entera",
+                    "Un campo o conjunto de campos que identifica de forma única e irrepetible a cada fila de una tabla",
+                    "Cualquier campo que admita valores nulos y duplicados",
+                    "Una contraseña asignada al usuario Administrador"
+                ],
+                correct: 1,
+                explanation: "La clave primaria identifica de forma única a cada registro en una tabla y no puede contener valores NULL."
+            },
+            {
+                id: 30,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿Qué es una Clave Foránea (Foreign Key)?",
+                options: [
+                    "Una clave de una base de datos ubicada en un servidor extranjero",
+                    "Un campo en una tabla que hace referencia a la Clave Primaria de otra tabla para establecer una relación",
+                    "Un atributo que no se puede consultar mediante SELECT",
+                    "Una columna para almacenar texto en idioma extranjero"
+                ],
+                correct: 1,
+                explanation: "Una Clave Foránea vincula dos tablas garantizando la integridad referencial entre los datos relacionados."
+            },
+            {
+                id: 31,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "¿Qué comando SQL se utiliza para ordenar los resultados de una consulta de forma ascendente o descendente?",
+                options: [
+                    "GROUP BY",
+                    "ORDER BY",
+                    "SORT BY",
+                    "ALIGN BY"
+                ],
+                correct: 1,
+                explanation: "ORDER BY se utiliza para ordenar el conjunto de resultados por una o más columnas (ASC o DESC)."
+            },
+            {
+                id: 32,
+                category: "SQL",
+                categoryName: "SQL Básico",
+                question: "En una sentencia SELECT, ¿cuál es la función de la cláusula GROUP BY?",
+                options: [
+                    "Agrupar filas que tienen los mismos valores en filas de resumen o agregados (p. ej. COUNT, SUM)",
+                    "Crear un nuevo grupo de usuarios en el servidor",
+                    "Unir dos tablas por sus nombres de columna",
+                    "Eliminar los datos duplicados permanentemente del disco"
+                ],
+                correct: 0,
+                explanation: "GROUP BY agrupa conjuntos de filas según coincidencias en columnas clave para aplicar funciones de agregación."
+            },
+
+            // --- Categoría 5: Álgebra Relacional Básico (33-40) ---
+            {
+                id: 33,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué es el Álgebra Relacional?",
+                options: [
+                    "Un programa comercial de análisis estadístico",
+                    "Un lenguaje de consulta formal y procedimental que define operaciones sobre relaciones (tablas) para obtener nuevas relaciones",
+                    "Una rama de la física cuántica aplicada a servidores",
+                    "Un método gráfico para dibujar diagramas Entidad-Relación"
+                ],
+                correct: 1,
+                explanation: "El álgebra relacional es la base matemática conceptual de los lenguajes de consulta relacionales como SQL."
+            },
+            {
+                id: 34,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué símbolo matemático representa la operación de SELECCIÓN (filtrar filas que cumplen una condición)?",
+                options: [
+                    "Pi ( π )",
+                    "Sigma ( σ )",
+                    "Ró ( ρ )",
+                    "Unión ( ∪ )"
+                ],
+                correct: 1,
+                explanation: "La operación de Selección se denota con la letra griega Sigma ( σ ) y selecciona filas (tuplas) según una condición lógica."
+            },
+            {
+                id: 35,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué símbolo matemático representa la operación de PROYECCIÓN (elegir columnas específicas de una relación)?",
+                options: [
+                    "Sigma ( σ )",
+                    "Pi ( π )",
+                    "Theta ( θ )",
+                    "Gamma ( γ )"
+                ],
+                correct: 1,
+                explanation: "La Proyección se representa con la letra griega Pi ( π ) y selecciona un subconjunto de atributos (columnas)."
+            },
+            {
+                id: 36,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué requisito deben cumplir dos relaciones (tablas) para aplicar operaciones como la UNIÓN (∪) o la DIFERENCIA (-)?",
+                options: [
+                    "Deben tener el mismo número de filas",
+                    "Deben ser 'Unión-Compatibles' (mismo número de atributos y tipos de datos compatibles)",
+                    "Una debe ser clave foránea de la otra",
+                    "Deben pertenecer a servidores diferentes"
+                ],
+                correct: 1,
+                explanation: "Para realizar operaciones de conjuntos (Unión, Intersección, Diferencia), las relaciones deben tener la misma aridad y dominios compatibles."
+            },
+            {
+                id: 37,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué resultado produce la operación de PRODUCTO CARTESIANO ( R × S ) entre dos relaciones?",
+                options: [
+                    "Solo las filas que son idénticas en ambas tablas",
+                    "Combina cada fila de R con todas y cada una de las filas de S",
+                    "Suma los valores numéricos de ambas tablas",
+                    "Elimina todas las filas compartidas de la base de datos"
+                ],
+                correct: 1,
+                explanation: "El producto cartesiano R × S genera una relación con todas las combinaciones posibles de tuplas de R y S."
+            },
+            {
+                id: 38,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué operación del Álgebra Relacional combina el Producto Cartesiano seguido de una Selección para relacionar tablas mediante un atributo común?",
+                options: [
+                    "Reagrupamiento",
+                    "Junta / Reunión Natural ( Natural Join ⋈ )",
+                    "Renombrado ( ρ )",
+                    "Diferencia Relacional"
+                ],
+                correct: 1,
+                explanation: "El Join o Reunión ( ⋈ ) combina tuplas de dos relaciones basándose en la coincidencia de valores en atributos compartidos."
+            },
+            {
+                id: 39,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "¿Qué operador se utiliza para RENOMBRAR la relación o sus atributos?",
+                options: [
+                    "Ró ( ρ )",
+                    "Sigma ( σ )",
+                    "Delta ( δ )",
+                    "Lambda ( λ )"
+                ],
+                correct: 0,
+                explanation: "El operador Renombrado se denota con la letra griega Ró ( ρ ) y permite cambiar el nombre de relaciones o columnas."
+            },
+            {
+                id: 40,
+                category: "REL",
+                categoryName: "Álgebra Relacional",
+                question: "Si la relación A tiene 4 filas y la relación B tiene 5 filas, ¿cuántas filas tendrá el producto cartesiano A × B?",
+                options: [
+                    "9 filas",
+                    "20 filas",
+                    "1 fila",
+                    "5 filas"
+                ],
+                correct: 1,
+                explanation: "El número de tuplas del producto cartesiano es el producto de sus cardinalidades: 4 × 5 = 20."
+            }
+        ];
+
+        // ESTADO DE LA APLICACIÓN
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let userAnswers = [];
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let participantName = "Invitado";
+
+        // ELEMENTOS DEL DOM
+        const setupScreen = document.getElementById('setupScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const quizHeaderStats = document.getElementById('quizHeaderStats');
+
+        const participantInput = document.getElementById('participantName');
+        const questionCountInput = document.getElementById('questionCount');
+        const questionCountDisplay = document.getElementById('questionCountDisplay');
+        const categoryFilterSelect = document.getElementById('categoryFilter');
+        const startBtn = document.getElementById('startBtn');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const userBadge = document.getElementById('userBadge');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const categoryBadge = document.getElementById('categoryBadge');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackContainer = document.getElementById('feedbackContainer');
+        const feedbackTitle = document.getElementById('feedbackTitle');
+        const feedbackText = document.getElementById('feedbackText');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        const resultUserText = document.getElementById('resultUserText');
+        const scorePercent = document.getElementById('scorePercent');
+        const scoreBadge = document.getElementById('scoreBadge');
+        const scoreCircle = document.getElementById('scoreCircle');
+        const statCorrect = document.getElementById('statCorrect');
+        const statIncorrect = document.getElementById('statIncorrect');
+        const statOmitted = document.getElementById('statOmitted');
+        const reviewList = document.getElementById('reviewList');
+        const retryBtn = document.getElementById('retryBtn');
+        const homeBtn = document.getElementById('homeBtn');
+
+        // INICIALIZACIÓN
+        window.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+
+            questionCountInput.addEventListener('input', (e) => {
+                questionCountDisplay.textContent = e.target.value;
+            });
+
+            startBtn.addEventListener('click', startQuiz);
+            clearHistoryBtn.addEventListener('click', clearHistory);
+            prevBtn.addEventListener('click', goPrevious);
+            nextBtn.addEventListener('click', goNext);
+            retryBtn.addEventListener('click', resetQuiz);
+            homeBtn.addEventListener('click', goHome);
+        });
+
+        function startQuiz() {
+            participantName = participantInput.value.trim() || "Participante";
+            const requestedCount = parseInt(questionCountInput.value);
+            const categoryFilter = categoryFilterSelect.value;
+
+            // Filtrar preguntas
+            let filtered = QUESTION_BANK;
+            if (categoryFilter !== "ALL") {
+                filtered = QUESTION_BANK.filter(q => q.category === categoryFilter);
+            }
+
+            if (filtered.length === 0) {
+                alert("No hay preguntas disponibles para la categoría seleccionada.");
+                return;
+            }
+
+            // Mezclar preguntas aleatoriamente (Algoritmo Fisher-Yates)
+            const shuffled = [...filtered];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            // Seleccionar cantidad deseada
+            currentQuestions = shuffled.slice(0, Math.min(requestedCount, shuffled.length));
+            currentIndex = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            secondsElapsed = 0;
+
+            // Ajustar UI
+            userBadge.textContent = participantName;
+            setupScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            quizHeaderStats.classList.remove('hidden');
+
+            // Iniciar Cronómetro
+            startTimer();
+
+            // Cargar Primera Pregunta
+            renderQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "00:00";
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            const q = currentQuestions[currentIndex];
+            
+            // Actualizar Progreso
+            progressText.textContent = `Pregunta ${currentIndex + 1} de ${currentQuestions.length}`;
+            const percentage = ((currentIndex + 1) / currentQuestions.length) * 100;
+            progressBar.style.width = `${percentage}%`;
+            categoryBadge.textContent = q.categoryName;
+
+            // Texto de Pregunta
+            questionText.textContent = `${currentIndex + 1}. ${q.question}`;
+
+            // Renderizar Opciones
+            optionsContainer.innerHTML = '';
+            const selectedAnswer = userAnswers[currentIndex];
+
+            q.options.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full text-left p-4 rounded-xl border transition flex items-center justify-between text-sm md:text-base font-medium `;
+                
+                if (selectedAnswer === null) {
+                    btn.className += `bg-slate-800/80 border-slate-700/70 hover:bg-slate-700/80 hover:border-brand-500/50 text-slate-200`;
+                } else {
+                    if (optIdx === q.correct) {
+                        btn.className += `bg-emerald-500/20 border-emerald-500/60 text-emerald-200`;
+                    } else if (optIdx === selectedAnswer) {
+                        btn.className += `bg-rose-500/20 border-rose-500/60 text-rose-200`;
+                    } else {
+                        btn.className += `bg-slate-900/40 border-slate-800 text-slate-500 opacity-60`;
+                    }
+                }
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-slate-900/60 border border-slate-700/60 flex items-center justify-center text-xs font-bold text-slate-400">
+                            ${String.fromCharCode(65 + optIdx)}
+                        </span>
+                        <span>${optText}</span>
+                    </div>
+                `;
+
+                if (selectedAnswer !== null) {
+                    if (optIdx === q.correct) {
+                        btn.innerHTML += `<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>`;
+                    } else if (optIdx === selectedAnswer) {
+                        btn.innerHTML += `<i class="fa-solid fa-circle-xmark text-rose-400 text-lg"></i>`;
+                    }
+                }
+
+                btn.onclick = () => selectOption(optIdx);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Mostrar u Ocultar Retroalimentación
+            if (selectedAnswer !== null) {
+                feedbackContainer.classList.remove('hidden');
+                if (selectedAnswer === q.correct) {
+                    feedbackContainer.className = "p-4 rounded-xl border text-sm space-y-1 bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-check-circle"></i> ¡Respuesta Correcta!`;
+                } else {
+                    feedbackContainer.className = "p-4 rounded-xl border text-sm space-y-1 bg-rose-500/10 border-rose-500/30 text-rose-300";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Respuesta Incorrecta`;
+                }
+                feedbackText.textContent = q.explanation;
+            } else {
+                feedbackContainer.classList.add('hidden');
+            }
+
+            // Actualizar botones navegación
+            prevBtn.disabled = currentIndex === 0;
+            if (currentIndex === currentQuestions.length - 1) {
+                nextBtn.innerHTML = `<span>Finalizar</span> <i class="fa-solid fa-flag-checkered"></i>`;
+                nextBtn.className = "py-2.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center gap-2";
+            } else {
+                nextBtn.innerHTML = `<span>Siguiente</span> <i class="fa-solid fa-arrow-right"></i>`;
+                nextBtn.className = "py-2.5 px-6 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center gap-2";
+            }
+        }
+
+        function selectOption(index) {
+            if (userAnswers[currentIndex] !== null) return; // Ya respondida
+            userAnswers[currentIndex] = index;
+            renderQuestion();
+        }
+
+        function goPrevious() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function goNext() {
+            if (currentIndex < currentQuestions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            clearInterval(timerInterval);
+
+            // Calcular resultados
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let omittedCount = 0;
+
+            currentQuestions.forEach((q, idx) => {
+                const ans = userAnswers[idx];
+                if (ans === null) {
+                    omittedCount++;
+                } else if (ans === q.correct) {
+                    correctCount++;
+                } else {
+                    incorrectCount++;
+                }
+            });
+
+            const total = currentQuestions.length;
+            const scorePercentage = Math.round((correctCount / total) * 100);
+
+            // Guardar en Historial
+            saveAttempt({
+                name: participantName,
+                date: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
+                totalQuestions: total,
+                correct: correctCount,
+                incorrect: incorrectCount,
+                omitted: omittedCount,
+                percentage: scorePercentage,
+                timeSeconds: secondsElapsed
+            });
+
+            // Actualizar Vista de Resultados
+            resultUserText.innerHTML = `Participante: <span class="font-bold text-brand-400">${participantName}</span> | Tiempo: ${timerDisplay.textContent}`;
+            scorePercent.textContent = `${scorePercentage}%`;
+
+            // Configurar Anillo visual
+            scoreCircle.setAttribute('stroke-dasharray', `${scorePercentage}, 100`);
+
+            if (scorePercentage >= 70) {
+                scoreBadge.textContent = "APROBADO";
+                scoreBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                scoreCircle.setAttribute('class', 'text-emerald-500');
+            } else {
+                scoreBadge.textContent = "NECESITA REPASO";
+                scoreBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                scoreCircle.setAttribute('class', 'text-rose-500');
+            }
+
+            statCorrect.textContent = correctCount;
+            statIncorrect.textContent = incorrectCount;
+            statOmitted.textContent = omittedCount;
+
+            // Renderizar lista de revisión
+            reviewList.innerHTML = '';
+            currentQuestions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.correct;
+                const isOmitted = userAns === null;
+
+                const card = document.createElement('div');
+                card.className = `glass-card p-4 rounded-xl border space-y-2 text-sm ${
+                    isCorrect ? 'border-emerald-500/30' : isOmitted ? 'border-amber-500/30' : 'border-rose-500/30'
+                }`;
+
+                let statusBadge = isCorrect 
+                    ? `<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-semibold">Correcta</span>`
+                    : isOmitted
+                    ? `<span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30 font-semibold">Omitida</span>`
+                    : `<span class="bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded border border-rose-500/30 font-semibold">Incorrecta</span>`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="font-semibold text-slate-200">${idx + 1}. ${q.question}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="text-xs space-y-1 text-slate-300">
+                        <p><span class="text-slate-500">Tu respuesta:</span> ${isOmitted ? '<i>Sin responder</i>' : q.options[userAns]}</p>
+                        ${!isCorrect ? `<p><span class="text-emerald-400 font-medium">Respuesta correcta:</span> ${q.options[q.correct]}</p>` : ''}
+                    </div>
+                    <div class="text-xs text-slate-400 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80">
+                        <i class="fa-solid fa-circle-info text-brand-400 mr-1"></i> ${q.explanation}
+                    </div>
+                `;
+
+                reviewList.appendChild(card);
+            });
+
+            // Cambiar Pantallas
+            quizScreen.classList.add('hidden');
+            quizHeaderStats.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+
+            loadHistory();
+        }
+
+        // MANEJO DE HISTORIAL LOCALSTORAGE
+        function saveAttempt(attemptData) {
+            const history = getHistory();
+            history.unshift(attemptData); // agregar al inicio
+            localStorage.setItem('db_quiz_history', JSON.stringify(history.slice(0, 15))); // Máx 15
+        }
+
+        function getHistory() {
+            const stored = localStorage.getItem('db_quiz_history');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function loadHistory() {
+            const history = getHistory();
+            historyList.innerHTML = '';
+
+            if (history.length === 0) {
+                historyList.innerHTML = `<p class="text-center text-slate-500 py-8 text-sm">No hay intentos registrados aún.</p>`;
+                return;
+            }
+
+            history.forEach(item => {
+                const isPassed = item.percentage >= 70;
+                const card = document.createElement('div');
+                card.className = "bg-slate-950/50 border border-slate-800 rounded-xl p-3 flex items-center justify-between hover:border-slate-700 transition";
+                
+                card.innerHTML = `
+                    <div class="space-y-0.5">
+                        <div class="text-sm font-bold text-slate-200">${item.name}</div>
+                        <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                            <span><i class="fa-regular fa-calendar"></i> ${item.date}</span>
+                            <span>•</span>
+                            <span>${item.correct}/${item.totalQuestions} aciertos</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-base font-extrabold ${isPassed ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${item.percentage}%
+                        </span>
+                        <div class="text-[10px] font-semibold px-2 py-0.5 rounded ${isPassed ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                            ${isPassed ? 'Aprobado' : 'Reprobado'}
+                        </div>
+                    </div>
+                `;
+                historyList.appendChild(card);
+            });
+        }
+
+        function clearHistory() {
+            if (confirm("¿Estás seguro de que deseas borrar todo el historial de intentos?")) {
+                localStorage.removeItem('db_quiz_history');
+                loadHistory();
+            }
+        }
+
+        function resetQuiz() {
+            startQuiz();
+        }
+
+        function goHome() {
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            quizHeaderStats.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            loadHistory();
+        }
+    </script>
+</body>
+</html>
